@@ -1,0 +1,17 @@
+# Original game executable, runtime library, configuration, and media assets
+/Wargames.exe
+/fmod.dll
+/Wargames.cfg
+/Readme.txt
+/Gfx/
+/Snd/
+/Vid/
+/Wopr/
+
+# Reverse-engineering outputs and original-game-derived evidence
+/re/
+/rebuild/evidence/
+
+# Local build products
+/rebuild/wargame-c
+/rebuild/tools/__pycache__/
