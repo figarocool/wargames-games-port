@@ -11,6 +11,13 @@
 #include <unistd.h>
 
 enum { VIDEO_WIDTH = 800, VIDEO_HEIGHT = 592, VIDEO_RATE = 25, AUDIO_RATE = 48000 };
+
+const char *media_asset_prefix(void) {
+    if (access("Snd", F_OK) == 0) return "";
+    if (access("../Snd", F_OK) == 0) return "../";
+    return "";
+}
+
 static const char *const effect_names[19] = {
     "Waracdnd", "Warcords", "Wargrr", "Wargtr", "Warhtent", "Warlot1",
     "Warlstgm", "Warmiswn", "Warnocmp", "Warottt", "Warstwt", "Warswof2",
@@ -20,7 +27,7 @@ static const char *const effect_names[19] = {
 /* Resolve a sound effect filename without requiring installation or data extraction. */
 static const char *sound_path(const char *name) {
     static char path[256];
-    snprintf(path, sizeof(path), "../Snd/%s.dat", name);
+    snprintf(path, sizeof(path), "%sSnd/%s.dat", media_asset_prefix(), name);
     return path;
 }
 
@@ -37,7 +44,9 @@ int media_audio_init(GameAudio *audio) {
     if (Mix_OpenAudio(44100, AUDIO_S16SYS, 2, 2048) != 0) return 0;
     for (size_t i = 0; i < sizeof(effect_names) / sizeof(effect_names[0]); i++)
         audio->effects[i] = load_effect(effect_names[i]);
-    SDL_RWops *ring_stream = SDL_RWFromFile("../Snd/Warphrng.dat", "rb");
+    char ring_path[256];
+    snprintf(ring_path, sizeof(ring_path), "%sSnd/Warphrng.dat", media_asset_prefix());
+    SDL_RWops *ring_stream = SDL_RWFromFile(ring_path, "rb");
     if (ring_stream) audio->phone_ring = Mix_LoadMUSType_RW(ring_stream, MUS_MP3, 1);
     audio->ready = 1;
     return 1;
@@ -73,7 +82,7 @@ void media_voice(GameAudio *audio, const char *asset_name) {
     if (!audio || !audio->ready || !asset_name) return;
     media_stop_voice(audio);
     char path[256];
-    snprintf(path, sizeof(path), "../Wopr/%s.dat", asset_name);
+    snprintf(path, sizeof(path), "%sWopr/%s.dat", media_asset_prefix(), asset_name);
     SDL_RWops *stream = SDL_RWFromFile(path, "rb");
     if (!stream) return;
     audio->voice = Mix_LoadMUSType_RW(stream, MUS_MP3, 1);
@@ -171,7 +180,7 @@ int media_video_start(MediaPlayer *player, SDL_Renderer *renderer, const char *a
     }
 
     char path[256];
-    snprintf(path, sizeof(path), "../Vid/%s.dat", asset_name);
+    snprintf(path, sizeof(path), "%sVid/%s.dat", media_asset_prefix(), asset_name);
     int video_fds[2], audio_fds[2];
     if (pipe(video_fds) != 0) {
         player->failed = 1;

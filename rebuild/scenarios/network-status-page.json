@@ -1,0 +1,13 @@
+[
+  {"key": "Down", "repeat": 3, "target": "original", "interval_ms": 250},
+  {"key": "Down", "repeat": 2, "target": "candidate", "interval_ms": 250},
+  {"key": "Return"},
+  {"wait_ms": 4500},
+  {"text": "Joshua", "char_delay_ms": 50},
+  {"key": "Return"},
+  {"wait_ms": 1500},
+  {"capture": "network-page"},
+  {"key": "Return", "target": "candidate"},
+  {"wait_ms": 25000},
+  {"capture": "greeting-after-network"}
+]

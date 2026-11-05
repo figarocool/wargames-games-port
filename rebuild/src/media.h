@@ -31,6 +31,7 @@ typedef struct {
 } GameAudio;
 
 /* Open decoders and the SDL audio output. Audio is optional at runtime. */
+const char *media_asset_prefix(void);
 int media_audio_init(GameAudio *audio);
 void media_audio_close(GameAudio *audio);
 void media_voice(GameAudio *audio, const char *asset_name);

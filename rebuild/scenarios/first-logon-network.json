@@ -1,0 +1,9 @@
+[
+  {"wait_ms": 1000},
+  {"key": "Down", "repeat": 2, "hold_ms": 250, "interval_ms": 350},
+  {"key": "Return", "hold_ms": 250, "settle_ms": 4500},
+  {"capture": "first-logon"},
+  {"text": "Joshua", "char_delay_ms": 50},
+  {"key": "Return", "hold_ms": 250, "settle_ms": 25000},
+  {"capture": "greeting-after-network"}
+]

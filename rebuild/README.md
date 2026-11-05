@@ -25,6 +25,46 @@ i tempi indicati e salva schermate ai checkpoint richiesti. Il file JSON descriv
 la sequenza:
 per le azioni non sincronizzate si può aggiungere `"target": "original"` o
 `"target": "candidate"`; senza `target`, l'azione raggiunge entrambi.
+
+Per avviare tutto con un comando (Wine originale + C su due display Xvfb isolati),
+usare `tools/run_comparison.py`. Avvia entrambi i programmi, attende le finestre,
+esegue il replay e chiude processi e display anche se il confronto fallisce:
+
+```sh
+python3 tools/run_comparison.py evidence/carriers/sequence.json /tmp/carrier-check \
+  --candidate-start carriers
+```
+
+Il launcher usa il prefix QA dedicato `~/.wine-wargame` e silenzia SDL e Wine
+senza toccare il volume del desktop: instrada Wine a un sink PulseAudio temporaneo
+muto e lo rimuove alla fine. `--wineprefix` sceglie un altro prefix. Per prove
+audio esplicite passare `--audio`; `--candidate-start` permette di saltare al
+ramo QA del C, mentre la timeline deve portare l'originale alla stessa scena.
+
+La timeline `scenarios/first-logon-network.json` percorre carrier → primo LOGON
+→ Joshua → fine della sequenza stato-rete → dialogo. Per testare il nuovo port
+della `FUN_00410f00`:
+
+```sh
+python3 tools/run_comparison.py scenarios/first-logon-network.json \
+  /tmp/first-logon-network --candidate-start carriers
+```
+
+Per fermare il C su un singolo fotogramma della sequenza, avviarlo con
+`WARGAME_COMPARE_START=network-status` e `WARGAME_COMPARE_NETWORK_HOLD=0..7`;
+Invio rilascia il fermo e riprende la timeline originale.
+
+Per validare una pagina breve della routine contro un video Wine (senza dover
+catturare i due display nello stesso millisecondo), per esempio la pagina 0:
+
+```sh
+WARGAME_COMPARE_NETWORK_HOLD=0 python3 tools/run_comparison.py \
+  scenarios/network-status-page.json /tmp/network-page-0 \
+  --candidate-start carriers --record-original /tmp/network-original.mkv
+python3 tools/compare_recording.py /tmp/network-original.mkv /tmp/network-page-0 \
+  /tmp/network-page-0-match --pattern 'c-network-page.png'
+```
+
 Per isolare il menu dei carrier avviare il C con
 `WARGAME_COMPARE_START=carriers ./wargame-c`; `phone-scan` e `intro` isolano il
 ramo opzionale iniziale. Per la coda FBI usare
