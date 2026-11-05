@@ -2,8 +2,10 @@
 /Wargames.exe
 /fmod.dll
 /Wargames.cfg
+/rebuild/Wargames.cfg*
 /Readme.txt
 /Gfx/
+!/Gfx/Warints2.dat
 /Snd/
 /Vid/
 /Wopr/

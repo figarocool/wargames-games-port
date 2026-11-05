@@ -1733,10 +1733,29 @@ static void start_stage(App *a, Stage stage, const char *background) {
     if (stage != LIST_GAMES || !a->game_list_waiting) stage_prompt(a);
 }
 
+static void reload_intro_banner(App *a) {
+    if (a->intro_banner) {
+        SDL_DestroyTexture(a->intro_banner);
+        a->intro_banner = NULL;
+    }
+    char bmp_path[256];
+    if (a->lang == LANG_IT && access("Gfx_it/Warints2.dat", R_OK) == 0) {
+        snprintf(bmp_path, sizeof(bmp_path), "Gfx_it/Warints2.dat");
+    } else {
+        snprintf(bmp_path, sizeof(bmp_path), "%sGfx/Warints2.dat", media_asset_prefix());
+    }
+    SDL_Surface *banner_surface = SDL_LoadBMP(bmp_path);
+    if (banner_surface) {
+        a->intro_banner = SDL_CreateTextureFromSurface(a->renderer, banner_surface);
+        SDL_FreeSurface(banner_surface);
+    }
+}
+
 static void start_intro(App *a) {
     a->stage = INTRO;
     a->intro_started = SDL_GetTicks() + 2600u;
     set_background(a, "Warintsc");
+    reload_intro_banner(a);
     snprintf(a->deferred_voice, sizeof(a->deferred_voice), "%s", "Warintro");
     a->deferred_voice_deadline = a->intro_started;
     stage_prompt(a);
@@ -2662,8 +2681,10 @@ static void render(App *a) {
         SDL_Rect banner_strip = {0, 568, W, 32};
         SDL_RenderFillRect(a->renderer, &banner_strip);
         if (a->intro_banner) {
+            int banner_w = 1771, banner_h = 32;
+            SDL_QueryTexture(a->intro_banner, NULL, NULL, &banner_w, &banner_h);
             int scroll = (int)(elapsed / 5u);
-            SDL_Rect banner = {W - scroll, 568, 1720, 32};
+            SDL_Rect banner = {W - scroll, 568, banner_w, 32};
             SDL_RenderCopy(a->renderer, a->intro_banner, NULL, &banner);
         }
         present_rendered_frame(a);

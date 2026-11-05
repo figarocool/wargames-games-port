@@ -1,21 +1,47 @@
-# Wargames: ricostruzione in C
+# Wargames: Ricostruzione e Porting in C (8Byte Software)
 
-Questa è una ricostruzione nativa e leggibile del gioco presente nella cartella. Il codice C descrive le schermate, i comandi, le transizioni della storia e la riproduzione dei media con nomi comprensibili; non contiene indirizzi del programma originale né etichette di funzioni generate dal decompilatore. I file di analisi Ghidra sono conservati separatamente in `../re/` e non sono usati per compilare il gioco.
+Questa è la ricostruzione e porting nativo in linguaggio C (C11 + SDL2) del videogioco per PC *WarGames* (1983/1995/2008), originariamente programmato in FreeBASIC da **Franco Togliatto** e riscritto ed esteso da **Stefano Basile** ([stefanobasile@usa.com](mailto:stefanobasile@usa.com)) per **8Byte Software** (2026).
 
-## Compilazione e avvio
+Il codice C descrive ad alto livello le schermate, i comandi, le transizioni della storia, la gestione dei font TrueType e la riproduzione dei media; non contiene indirizzi fissi del programma originale né etichette opache del decompilatore. I file di reverse-engineering Ghidra sono conservati separatamente in `../re/` e non sono necessari per la compilazione del gioco.
 
-Su Debian/Ubuntu installare i pacchetti necessari:
+## Compilazione e Avvio
 
+### 1. Dipendenze
+- **Debian / Ubuntu / Mint**:
+  ```sh
+  sudo apt install build-essential pkg-config libsdl2-dev libsdl2-ttf-dev libsdl2-mixer-dev libx11-dev fonts-pc ffmpeg
+  ```
+- **Fedora / RHEL**:
+  ```sh
+  sudo dnf install gcc make SDL2-devel SDL2_ttf-devel SDL2_mixer-devel libX11-devel ffmpeg
+  ```
+- **Arch Linux / Manjaro**:
+  ```sh
+  sudo pacman -S base-devel sdl2 sdl2_ttf sdl2_mixer libx11 ffmpeg
+  ```
+
+### 2. Compilazione
+Dalla cartella principale o da `rebuild/`:
 ```sh
-sudo apt install build-essential pkg-config libsdl2-dev libsdl2-ttf-dev libsdl2-mixer-dev libx11-dev fonts-pc ffmpeg
+make -C rebuild
 ```
 
-Poi, da questa cartella:
-
+### 3. Esecuzione
 ```sh
-make
-./wargame-c
+./rebuild/wargame-c
 ```
+
+## Versioni e Modalità del Gioco
+
+All'avvio, il menu permette di selezionare:
+1. **ITALIANO (CLASSICO)**: Fedele 1:1 all'avventura originale di Franco Togliatto, interamente tradotto in italiano (didascalie trasparenti, terminale e audio).
+2. **ITALIANO (VERSIONE ESTESA)**: Include tutta la trama classica con in più l'hacking bancario completo della Union Pacific (`311-399-2364`), il sistema Pan Am esteso e tutti i giochi della lista di Joshua sbloccati e giocabili (*Scacchi*, *Falken's Maze*, *Blackjack*, *Poker*, *Tris*).
+3. **ENGLISH (CLASSIC)**: Modalità cinematografica originale fedele al film del 1983.
+4. **ENGLISH (EXTENDED)**: Edizione estesa in inglese con tutti i giochi e sistemi giocabili.
+
+### Easter Eggs al prompt `LOGON:`
+- `stefano` o `stefano basile`: crediti del porting di Stefano Basile per 8Byte Software (`stefanobasile@usa.com`).
+- `franco`: omaggio al programmatore originale Franco Togliatto.
 
 ## Confronto automatico con l'originale
 
