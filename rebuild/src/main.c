@@ -1905,18 +1905,26 @@ static void submit(App *a) {
         }
         break;
     case PLAY:
-        if (has(s, "chess") || has(s, "scacchi")) start_stage(a, CHESS_REFUSAL, NULL);
-        else if (starts(s, "lov") || starts(s, "let") || starts(s, "ye") ||
-                 starts(s, "si") || starts(s, "sì") || starts(s, "vol") ||
-                 starts(s, "cert") || starts(s, "gioc"))
+        if (has(s, "chess") || has(s, "scacchi")) {
+            start_stage(a, CHESS_REFUSAL, NULL);
+        } else if (has(s, "war") || has(s, "guerra") || has(s, "termonucleare") || has(s, "thermonuclear")) {
+            start_stage(a, SIMULATION_ACCEPTED, NULL);
+        } else if (starts(s, "lov") || starts(s, "let") || starts(s, "ye") ||
+                   starts(s, "si") || starts(s, "sì") || starts(s, "vol") ||
+                   starts(s, "cert") || starts(s, "ok") || starts(s, "d'accordo") ||
+                   has(s, "gioc") || has(s, "play") || has(s, "cosa") || has(s, "what") ||
+                   has(s, "quali") || has(s, "?") || *s) {
             start_stage(a, LATER, NULL);
-        else if (*s) start_stage(a, SIMULATION_ACCEPTED, NULL);
+        }
         break;
     case CHESS_REFUSAL:
         if (*s) start_stage(a, SIMULATION_ACCEPTED, NULL);
         break;
     case LATER:
-        if (*s) start_stage(a, SIMULATION_ACCEPTED, NULL);
+        if (has(s, "chess") || has(s, "scacchi") || starts(s, "si") || starts(s, "sì") || starts(s, "ye"))
+            start_stage(a, CHESS_REFUSAL, NULL);
+        else if (*s)
+            start_stage(a, SIMULATION_ACCEPTED, NULL);
         break;
     case SIDE:
         /* FUN_0040fcb0(2) keeps waiting until the numeric input converts to 2. */
@@ -2142,13 +2150,14 @@ static int opening_dialogue_line_y(const App *a, int index) {
     const char *line = a->lines[index];
     if (strcmp(line, "HOW ARE YOU TODAY?") == 0 || strcmp(line, "COME STA OGGI?") == 0) return 144;
     if (strncmp(line, "EXCELLENT,", 10) == 0 || strncmp(line, "ECCELLENTE,", 11) == 0) return 224;
-    if (strncmp(line, "CAN YOU EXPLAIN", 15) == 0 || strncmp(line, "PUÒ SPIEGARE", 13) == 0 || strncmp(line, "PUO' SPIEGARE", 13) == 0) return 240;
-    if (strcmp(line, "YES THEY DO.") == 0 || strcmp(line, "SÌ, LO FANNO.") == 0 || strcmp(line, "SI, LO FANNO.") == 0) return 320;
-    if (strcmp(line, "SHALL WE PLAY A GAME?") == 0 || strcmp(line, "GIOCHIAMO A QUALCOSA?") == 0) return 352;
+    if (strncmp(line, "CAN YOU EXPLAIN", 15) == 0 || strstr(line, "SPIEGARE") != NULL) return 240;
+    if (strcmp(line, "YES THEY DO.") == 0 || strstr(line, "LO FANNO") != NULL) return 320;
+    if (strcmp(line, "SHALL WE PLAY A GAME?") == 0 || strstr(line, "GIOCHIAMO A QUALCOSA") != NULL) return 352;
     if (strncmp(line, "WOULDN'T YOU PREFER", 19) == 0 ||
-        strncmp(line, "NON PREFERISCE", 14) == 0 ||
+        strstr(line, "NON PREFERISCE") != NULL ||
+        strstr(line, "PREFERISCE") != NULL ||
         strncmp(line, "SORRY, I DO NOT", 15) == 0 ||
-        strncmp(line, "MI DISPIACE, NON", 16) == 0)
+        strstr(line, "MI DISPIACE") != NULL)
         return opening_dialogue_line_y(a, index - 1) + 48;
     if (strcmp(line, "FINE.") == 0 || strcmp(line, "BENE.") == 0)
         return opening_dialogue_line_y(a, index - 1) + 48;
@@ -2488,38 +2497,47 @@ static void render(App *a) {
             draw_text(a, "Menu Choice", 8, 192, cyan);
             draw_block_cursor(a, 8, 224, cyan);
         } else if (a->stage == DIAL_DESTINATION) {
-            int ox = a->lang == LANG_IT ? 128 : 120;
-            draw_text(a, a->lang == LANG_IT ? "Destinazione:" : "Destination:", 8, 16, cyan);
+            const char *dest_label = a->lang == LANG_IT ? "Destinazione: " : "Destination: ";
+            int ox = 8 + (int)strlen(dest_label) * 8;
+            draw_text(a, dest_label, 8, 16, cyan);
             draw_text(a, a->input, ox, 16, cyan);
             draw_block_cursor(a, ox + (int)strlen(a->input) * 8, 16, cyan);
         } else if (a->stage == DIAL_DEPARTURE) {
-            int ox = a->lang == LANG_IT ? 128 : 120;
-            int px = 176;
-            draw_text(a, a->lang == LANG_IT ? "Destinazione:" : "Destination:", 8, 16, cyan);
+            const char *dest_label = a->lang == LANG_IT ? "Destinazione: " : "Destination: ";
+            const char *dep_label = a->lang == LANG_IT ? "Luogo di partenza: " : "Place of Departure: ";
+            int ox = 8 + (int)strlen(dest_label) * 8;
+            int px = 8 + (int)strlen(dep_label) * 8;
+            draw_text(a, dest_label, 8, 16, cyan);
             draw_text(a, a->panam_destination, ox, 16, cyan);
-            draw_text(a, a->lang == LANG_IT ? "Luogo di partenza:" : "Place of Departure:", 8, 48, cyan);
+            draw_text(a, dep_label, 8, 48, cyan);
             draw_text(a, a->input, px, 48, cyan);
             draw_block_cursor(a, px + (int)strlen(a->input) * 8, 48, cyan);
         } else if (a->stage == DIAL_PASSENGER) {
-            int ox = a->lang == LANG_IT ? 128 : 120;
-            int px = 176;
-            int nx = a->lang == LANG_IT ? 184 : 168;
-            draw_text(a, a->lang == LANG_IT ? "Destinazione:" : "Destination:", 8, 16, cyan);
+            const char *dest_label = a->lang == LANG_IT ? "Destinazione: " : "Destination: ";
+            const char *dep_label = a->lang == LANG_IT ? "Luogo di partenza: " : "Place of Departure: ";
+            const char *pass_label = a->lang == LANG_IT ? "Nome del passeggero: " : "Name of Passenger: ";
+            int ox = 8 + (int)strlen(dest_label) * 8;
+            int px = 8 + (int)strlen(dep_label) * 8;
+            int nx = 8 + (int)strlen(pass_label) * 8;
+            draw_text(a, dest_label, 8, 16, cyan);
             draw_text(a, a->panam_destination, ox, 16, cyan);
-            draw_text(a, a->lang == LANG_IT ? "Luogo di partenza:" : "Place of Departure:", 8, 48, cyan);
+            draw_text(a, dep_label, 8, 48, cyan);
             draw_text(a, a->panam_departure, px, 48, cyan);
-            draw_text(a, a->lang == LANG_IT ? "Nome del passeggero:" : "Name of Passenger:", 8, 80, cyan);
+            draw_text(a, pass_label, 8, 80, cyan);
             draw_text(a, a->input, nx, 80, cyan);
             draw_block_cursor(a, nx + (int)strlen(a->input) * 8, 80, cyan);
         } else if (a->stage == DIAL_TICKET) {
-            int ox = a->lang == LANG_IT ? 128 : 120;
-            int px = 176;
-            int nx = a->lang == LANG_IT ? 184 : 168;
-            draw_text(a, a->lang == LANG_IT ? "Destinazione:" : "Destination:", 8, 16, cyan);
+            const char *dest_label = a->lang == LANG_IT ? "Destinazione: " : "Destination: ";
+            const char *dep_label = a->lang == LANG_IT ? "Luogo di partenza: " : "Place of Departure: ";
+            const char *pass_label = a->lang == LANG_IT ? "Nome del passeggero: " : "Name of Passenger: ";
+            int ox = 8 + (int)strlen(dest_label) * 8;
+            int px = 8 + (int)strlen(dep_label) * 8;
+            int nx = 8 + (int)strlen(pass_label) * 8;
+            draw_text(a, dest_label, 8, 16, cyan);
             draw_text(a, a->panam_destination, ox, 16, cyan);
-            draw_text(a, a->lang == LANG_IT ? "Luogo di partenza:" : "Place of Departure:", 8, 48, cyan);
+            draw_text(a, dep_label, 8, 48, cyan);
             draw_text(a, a->panam_departure, px, 48, cyan);
-            draw_text(a, a->lang == LANG_IT ? "Nome del passeggero:" : "Name of Passenger:", 8, 80, cyan);
+            draw_text(a, pass_label, 8, 80, cyan);
             draw_text(a, a->panam_passenger, nx, 80, cyan);
             draw_text(a, "Date of Issue", 584, 112, cyan);
             draw_text(a, "08/08/84", 712, 112, cyan);
@@ -2723,7 +2741,8 @@ static void render(App *a) {
                             (overview_prompts[i].row - 1) * 16,
                             cyan, 0);
         }
-        if (cities) draw_text(a, a->side_response, 200, 384, cyan);
+        int side_x = (overview_prompts[5].column - 1 + (int)strlen(get_overview_prompt_text(a, 5))) * 8;
+        if (cities) draw_text(a, a->side_response, side_x, 384, cyan);
         if (cities && a->overview_prompt > 6) {
             /* Twenty-nine CP437 0xc4 cells form a continuous horizontal rule. */
             SDL_SetRenderDrawColor(a->renderer, cyan.r, cyan.g, cyan.b, 255);
@@ -2743,7 +2762,7 @@ static void render(App *a) {
             if (a->stage == SIDE) snprintf(echoed, sizeof(echoed), "%s", a->input);
             else terminal_case_copy(echoed, sizeof(echoed),
                                     a->stage == SIMULATION_WARMUP ? a->second_target : a->input);
-            int x = a->stage == SIDE ? 200 : 40;
+            int x = a->stage == SIDE ? side_x : 40;
             int y = a->stage == SIDE ? 384 : a->target_mask ? 560 : 544;
             draw_text(a, echoed, x, y, cyan);
             if (a->stage != SIMULATION_WARMUP)
@@ -2947,7 +2966,7 @@ static void render(App *a) {
     }
     char prompt[LINE_LEN + 8];
     snprintf(prompt, sizeof(prompt), "%s_", a->input);
-    draw_text(a, prompt, 8, y + 6, green);
+    draw_text(a, prompt, 16, y + 6, green);
     present_rendered_frame(a);
 }
 
