@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #define W 800
 #define H 600
@@ -646,7 +647,14 @@ static void set_background(App *a, const char *name) {
         return;
     }
     char path[512];
-    snprintf(path, sizeof(path), "%sGfx/%s.dat", media_asset_prefix(), name);
+    if (a->lang == LANG_IT) {
+        snprintf(path, sizeof(path), "%sGfx_it/%s.dat", media_asset_prefix(), name);
+        if (access(path, R_OK) != 0) {
+            snprintf(path, sizeof(path), "%sGfx/%s.dat", media_asset_prefix(), name);
+        }
+    } else {
+        snprintf(path, sizeof(path), "%sGfx/%s.dat", media_asset_prefix(), name);
+    }
     SDL_Surface *surface = SDL_LoadBMP(path);
     if (!surface) return;
     SDL_Texture *next = SDL_CreateTextureFromSurface(a->renderer, surface);
@@ -659,7 +667,14 @@ static void set_background(App *a, const char *name) {
 /* Some caption modes mask black; the console's native blits preserve the palette. */
 static void load_story_caption(App *a, const char *name, int transparent) {
     char path[512];
-    snprintf(path, sizeof(path), "%sGfx/%s.dat", media_asset_prefix(), name);
+    if (a->lang == LANG_IT) {
+        snprintf(path, sizeof(path), "%sGfx_it/%s.dat", media_asset_prefix(), name);
+        if (access(path, R_OK) != 0) {
+            snprintf(path, sizeof(path), "%sGfx/%s.dat", media_asset_prefix(), name);
+        }
+    } else {
+        snprintf(path, sizeof(path), "%sGfx/%s.dat", media_asset_prefix(), name);
+    }
     SDL_Surface *surface = SDL_LoadBMP(path);
     if (!surface) return;
     SDL_Surface *rgba = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA32, 0);
