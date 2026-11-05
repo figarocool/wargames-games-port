@@ -1954,20 +1954,23 @@ static void submit(App *a) {
         break;
     case GREETING:
         if (starts(s, "hello") || starts(s, "how") || starts(s, "ciao") || starts(s, "salve") ||
-            starts(s, "buongiorno") || starts(s, "come") || ends(s, "?"))
+            starts(s, "buongiorno") || starts(s, "come") || starts(s, "hi") ||
+            starts(s, "greet") || starts(s, "salut") || ends(s, "?"))
             start_stage(a, HOW_ARE_YOU, NULL);
         break;
     case HOW_ARE_YOU:
         if (starts(s, "i") || starts(s, "ho") || starts(s, "g") || starts(s, "sto") ||
             starts(s, "bene") || starts(s, "tutto") || starts(s, "non") || starts(s, "e tu") ||
-            starts(s, "e lei") || ends(s, "?"))
+            starts(s, "e lei") || starts(s, "fine") || has(s, "fine") || has(s, "ok") ||
+            has(s, "bene") || has(s, "well") || ends(s, "?"))
             start_stage(a, MISTAKES, NULL);
         break;
     case MISTAKES:
         if (starts(s, "peo") || starts(s, "la gente") || starts(s, "gente") ||
             starts(s, "le persone") || starts(s, "persone") || starts(s, "error") ||
             starts(s, "si commettono") || starts(s, "tutti sbagliano") || starts(s, "sbagliare") ||
-            has(s, "sbagli") || has(s, "error")) {
+            has(s, "sbagli") || has(s, "error") || has(s, "mistake") || has(s, "errore") ||
+            has(s, "umano")) {
             push_line(a, a->lang == LANG_IT ? "SÌ, LO FANNO." : "YES THEY DO.");
             media_voice(&a->audio, "Warytd");
             snprintf(a->deferred_voice, sizeof(a->deferred_voice), "%s", "Warswpag");
@@ -2273,29 +2276,48 @@ static void draw_text(App *a, const char *text, int x, int y, SDL_Color c) {
     if (texture) { SDL_RenderCopy(a->renderer, texture, NULL, &dst); SDL_DestroyTexture(texture); }
 }
 
-/* FUN_004047f0 keeps the opening dialogue on one DOS text screen. Its
-   responses are not a scrolling chat log: prompts occupy the original rows. */
-static int opening_dialogue_line_y(const App *a, int index) {
-    if (index == 0) return 64;
-    const char *line = a->lines[index];
-    if (strcmp(line, "HOW ARE YOU TODAY?") == 0 || strcmp(line, "COME STA OGGI?") == 0) return 144;
-    if (strncmp(line, "EXCELLENT,", 10) == 0 || strncmp(line, "ECCELLENTE,", 11) == 0) return 224;
-    if (strncmp(line, "CAN YOU EXPLAIN", 15) == 0 || strstr(line, "SPIEGARE") != NULL) return 240;
-    if (strcmp(line, "YES THEY DO.") == 0 || strstr(line, "LO FANNO") != NULL) return 320;
-    if (strcmp(line, "SHALL WE PLAY A GAME?") == 0 || strstr(line, "GIOCHIAMO A QUALCOSA") != NULL) return 352;
+/* Determine whether a line was spoken by WOPR / Joshua or entered by the player. */
+static int is_joshua_prompt(const char *line) {
+    if (strncmp(line, "GREETINGS", 9) == 0 || strncmp(line, "SALUTI", 6) == 0) return 1;
+    if (strcmp(line, "HOW ARE YOU TODAY?") == 0 || strcmp(line, "COME STA OGGI?") == 0) return 1;
+    if (strncmp(line, "EXCELLENT,", 10) == 0 || strncmp(line, "ECCELLENTE,", 11) == 0) return 1;
+    if (strncmp(line, "CAN YOU EXPLAIN", 15) == 0 || strstr(line, "PUÒ SPIEGARE") != NULL || strstr(line, "SPIEGARE") != NULL) return 1;
+    if (strcmp(line, "YES THEY DO.") == 0 || strstr(line, "LO FANNO") != NULL) return 1;
+    if (strcmp(line, "SHALL WE PLAY A GAME?") == 0 || strstr(line, "GIOCHIAMO A QUALCOSA") != NULL) return 1;
     if (strncmp(line, "WOULDN'T YOU PREFER", 19) == 0 ||
         strstr(line, "NON PREFERISCE") != NULL ||
-        strstr(line, "PREFERISCE") != NULL ||
-        strncmp(line, "SORRY, I DO NOT", 15) == 0 ||
-        strstr(line, "MI DISPIACE") != NULL)
-        return opening_dialogue_line_y(a, index - 1) + 48;
-    if (strcmp(line, "FINE.") == 0 || strcmp(line, "BENE.") == 0)
-        return opening_dialogue_line_y(a, index - 1) + 48;
-    return opening_dialogue_line_y(a, index - 1) + 32;
+        strstr(line, "PREFERISCE") != NULL) return 1;
+    if (strncmp(line, "SORRY, I DO NOT", 15) == 0 || strstr(line, "MI DISPIACE") != NULL) return 1;
+    if (strcmp(line, "FINE.") == 0 || strcmp(line, "BENE.") == 0) return 1;
+    return 0;
+}
+
+/* FUN_004047f0 keeps the opening dialogue on a DOS text screen with authentic
+   spacing (+32 after prompt/input, +48 before computer answers, +16 on same-turn continuations).
+   When player errors or retries occur, each line cleanly flows below the previous one
+   without overwriting existing text. */
+static int opening_dialogue_line_y(const App *a, int index) {
+    if (index <= 0) return 64;
+    int prev_y = opening_dialogue_line_y(a, index - 1);
+    const char *line = a->lines[index];
+    const char *prev_line = a->lines[index - 1];
+
+    if (strncmp(line, "CAN YOU EXPLAIN", 15) == 0 || strstr(line, "PUÒ SPIEGARE") != NULL || strstr(line, "SPIEGARE") != NULL) {
+        if (strncmp(prev_line, "EXCELLENT,", 10) == 0 || strncmp(prev_line, "ECCELLENTE,", 11) == 0)
+            return prev_y + 16;
+    }
+    if (strcmp(line, "SHALL WE PLAY A GAME?") == 0 || strstr(line, "GIOCHIAMO A QUALCOSA") != NULL) {
+        if (strcmp(prev_line, "YES THEY DO.") == 0 || strstr(prev_line, "LO FANNO") != NULL)
+            return prev_y + 32;
+    }
+    if (is_joshua_prompt(line)) {
+        return prev_y + 48;
+    }
+    return prev_y + 32;
 }
 
 static int is_opening_dialogue_stage(Stage stage) {
-    return stage == HOW_ARE_YOU || stage == MISTAKES || stage == PLAY ||
+    return stage == GREETING || stage == HOW_ARE_YOU || stage == MISTAKES || stage == PLAY ||
            stage == CHESS_REFUSAL || stage == LATER || stage == SIMULATION_ACCEPTED;
 }
 
@@ -2796,16 +2818,6 @@ static void render(App *a) {
         present_rendered_frame(a);
         return;
     }
-    if (a->stage == GREETING) {
-        SDL_Color cyan = {131, 237, 240, 255};
-        char echoed[LINE_LEN];
-        terminal_case_copy(echoed, sizeof(echoed), a->input);
-        draw_text(a, a->lang == LANG_IT ? "SALUTI PROFESSOR FALKEN." : "GREETINGS PROFESSOR FALKEN.", 8, 64, cyan);
-        if (echoed[0]) draw_text(a, echoed, 8, 96, cyan);
-        draw_block_cursor(a, 8 + (int)strlen(echoed) * 8, 96, cyan);
-        present_rendered_frame(a);
-        return;
-    }
     if (a->stage == LOGON_FINAL) {
         SDL_Color cyan = {131, 237, 240, 255};
         if (a->background) {
@@ -2815,16 +2827,19 @@ static void render(App *a) {
                 ? (SDL_Rect){16, 0, 768, 576} : (SDL_Rect){0, 0, W, H};
             SDL_RenderCopy(a->renderer, a->background, NULL, &dst);
         }
-        int y = 16;
+        int total_h = 16 + a->line_count * 16 + 24;
+        int scroll = total_h > 560 ? total_h - 560 : 0;
+        int y = 16 - scroll;
         for (int i = 0; i < a->line_count; ++i) {
-            draw_text(a, a->lines[i], 8, y, cyan);
+            if (y >= 16 && y < 580) draw_text(a, a->lines[i], 8, y, cyan);
             y += 16;
         }
         char echoed[LINE_LEN];
         terminal_case_copy(echoed, sizeof(echoed), a->input);
-        draw_text(a, "LOGON: ", 8, y + 6, cyan);
-        draw_text(a, echoed, 64, y + 6, cyan);
-        draw_block_cursor(a, 64 + (int)strlen(echoed) * 8, y + 6, cyan);
+        int input_y = y + 6;
+        draw_text(a, "LOGON: ", 8, input_y, cyan);
+        draw_text(a, echoed, 64, input_y, cyan);
+        draw_block_cursor(a, 64 + (int)strlen(echoed) * 8, input_y, cyan);
         present_rendered_frame(a);
         return;
     }
@@ -2837,32 +2852,44 @@ static void render(App *a) {
                 ? (SDL_Rect){16, 0, 768, 576} : (SDL_Rect){0, 0, W, H};
             SDL_RenderCopy(a->renderer, a->background, NULL, &dst);
         }
-        int y = 16;
+        int total_h = 16 + a->line_count * 16 + 24;
+        int scroll = total_h > 560 ? total_h - 560 : 0;
+        int y = 16 - scroll;
         for (int i = 0; i < a->line_count; ++i) {
-            draw_text(a, a->lines[i], 8, y, cyan);
+            if (y >= 16 && y < 580) draw_text(a, a->lines[i], 8, y, cyan);
             y += 16;
         }
         char echoed[LINE_LEN];
         terminal_case_copy(echoed, sizeof(echoed), a->input);
-        draw_text(a, "LOGON: ", 8, y, cyan);
-        draw_text(a, echoed, 64, y, cyan);
-        draw_block_cursor(a, 64 + (int)strlen(echoed) * 8, y, cyan);
+        int input_y = y;
+        draw_text(a, "LOGON: ", 8, input_y, cyan);
+        draw_text(a, echoed, 64, input_y, cyan);
+        draw_block_cursor(a, 64 + (int)strlen(echoed) * 8, input_y, cyan);
         present_rendered_frame(a);
         return;
     }
     if (is_opening_dialogue_stage(a->stage)) {
         SDL_Color cyan = {131, 237, 240, 255};
         int last_y = 64;
-        for (int i = 0; i < a->line_count; ++i) {
-            last_y = opening_dialogue_line_y(a, i);
-            draw_text(a, a->lines[i], 8, last_y, cyan);
+        if (a->line_count > 0) {
+            last_y = opening_dialogue_line_y(a, a->line_count - 1);
         }
         int input_y = last_y + 32;
+        int bottom_y = (a->stage != SIMULATION_ACCEPTED) ? input_y + 24 : last_y + 24;
+        int scroll = bottom_y > 560 ? bottom_y - 560 : 0;
+
+        for (int i = 0; i < a->line_count; ++i) {
+            int y = opening_dialogue_line_y(a, i) - scroll;
+            if (y >= 16 && y < 580) {
+                draw_text(a, a->lines[i], 8, y, cyan);
+            }
+        }
         if (a->stage != SIMULATION_ACCEPTED) {
+            int cur_input_y = input_y - scroll;
             char echoed[LINE_LEN];
             terminal_case_copy(echoed, sizeof(echoed), a->input);
-            if (echoed[0]) draw_text(a, echoed, 8, input_y, cyan);
-            draw_block_cursor(a, 8 + (int)strlen(echoed) * 8, input_y, cyan);
+            if (echoed[0]) draw_text(a, echoed, 8, cur_input_y, cyan);
+            draw_block_cursor(a, 8 + (int)strlen(echoed) * 8, cur_input_y, cyan);
         }
         present_rendered_frame(a);
         return;
@@ -3591,7 +3618,7 @@ int main(void) {
         }
         if (a.play_prompt_pending &&
             (int32_t)(SDL_GetTicks() - a.play_prompt_deadline) >= 0) {
-            push_line(&a, "SHALL WE PLAY A GAME?");
+            push_line(&a, a.lang == LANG_IT ? "GIOCHIAMO A QUALCOSA?" : "SHALL WE PLAY A GAME?");
             a.play_prompt_pending = 0;
         }
         if (a.deferred_voice[0] && (int32_t)(SDL_GetTicks() - a.deferred_voice_deadline) >= 0) {
