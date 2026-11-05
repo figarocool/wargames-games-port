@@ -96,3 +96,55 @@ jobs:
         with:
           name: wargame-macos
           path: ./wargame-macos
+
+  release:
+    needs: [build-linux, build-windows, build-macos]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Package Windows Release (ZIP)
+        run: |
+          mkdir -p package-windows
+          cp -r Gfx Gfx_it Snd Vid Wopr Wopr_it Readme.txt README.md package-windows/
+          cp SDL2.dll SDL2_mixer.dll SDL2_ttf.dll iconv.dll libbz2-1.dll libfreetype-6.dll libgcc_s_seh-1.dll libglib-2.0-0.dll libharfbuzz-0.dll libintl-8.dll libpcre2-8-0.dll libpng16-16.dll libwinpthread-1.dll zlib1.dll package-windows/
+          cp artifacts/wargame-windows-x64/wargame.exe package-windows/
+          cd package-windows && zip -r ../WarGames-Windows-x64.zip . && cd ..
+
+      - name: Package Linux Release (TAR.GZ)
+        run: |
+          mkdir -p package-linux
+          cp -r Gfx Gfx_it Snd Vid Wopr Wopr_it Readme.txt README.md package-linux/
+          cp artifacts/wargame-linux-x86_64/wargame-linux-x86_64 package-linux/wargame-linux
+          chmod +x package-linux/wargame-linux
+          tar -czf WarGames-Linux-x86_64.tar.gz -C package-linux .
+
+      - name: Package macOS Release (ZIP)
+        run: |
+          mkdir -p package-macos
+          cp -r Gfx Gfx_it Snd Vid Wopr Wopr_it Readme.txt README.md package-macos/
+          cp artifacts/wargame-macos/wargame-macos package-macos/wargame-macos
+          chmod +x package-macos/wargame-macos
+          cd package-macos && zip -r ../WarGames-macOS.zip . && cd ..
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v1.0.0' }}
+          name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'WarGames Native C - v1.0.0' }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            WarGames-Windows-x64.zip
+            WarGames-Linux-x86_64.tar.gz
+            WarGames-macOS.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
