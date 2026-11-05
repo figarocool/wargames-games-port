@@ -189,3 +189,7 @@ L'eseguibile cerca i media originali nelle cartelle sorelle `Gfx/`, `Snd/`, `Vid
 Il decompilato Ghidra e l'eseguibile originale sotto Wine sono usati come riferimenti. Pan Am, la coda FBI e i checkpoint documentati di mappa iniziale, battaglia e mappa tattica sono validati pixel per pixel. Non è stata completata una partita comparativa né verificata ogni diramazione, immagine, voce, effetto, fotogramma e temporizzazione. La coda casuale della scansione non è confrontata su una durata completa e i tempi della banca non sono confrontati fotogramma per fotogramma. Il tris richiede ancora il confronto con Wine di rasterizzazione, testi e audio. Perciò questo programma **non è ancora un clone 1:1**.
 
 Il codice è stato ricompilato con `make` senza avvisi. Tutti i sette filmati hanno video 800×592 a 25 fps e audio stereo MP2 a 48 kHz, coerenti con il decoder SDL/FFmpeg. L'originale e la ricostruzione C sono stati avviati; il ramo Pan Am è stato percorso su entrambi e le schermate del C sono state confrontate direttamente con le catture Wine. Il ramo mappa dispone ora di un ingresso QA dedicato per il confronto diretto di fotogrammi e audio.
+
+## Licenza
+
+Il codice sorgente di questa ricostruzione e porting nativo in C è rilasciato sotto licenza [GNU General Public License v3.0 (GPLv3)](../LICENSE).

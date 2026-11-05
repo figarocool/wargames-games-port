@@ -91,6 +91,7 @@ All'avvio, il menu principale consente di selezionare la lingua e la modalità d
 
 ## 📜 Licenza e Crediti
 
-- Progetto originale (1995/2008): **Franco Togliatto** (FreeBASIC).
-- Porting in C nativo ed estensioni (2026): **Stefano Basile** per **8Byte Software**.
+- **Licenza Software**: Rilasciato sotto licenza libera [GNU General Public License v3.0 (GPLv3)](LICENSE).
+- **Progetto originale (1995/2008)**: **Franco Togliatto** (FreeBASIC).
+- **Porting in C nativo ed estensioni (2026)**: **Stefano Basile** per **8Byte Software**.
 - Tutti i marchi, loghi e riferimenti a *WarGames* (1983) appartengono ai rispettivi titolari (MGM / United Artists).

@@ -114,7 +114,7 @@ jobs:
         run: |
           if [ -f artifacts/wargame-windows-x64/wargame.exe ]; then
             mkdir -p package-windows
-            cp -r Gfx Gfx_it Snd Vid Wopr Wopr_it Readme.txt README.md package-windows/
+            cp -r Gfx Gfx_it Snd Vid Wopr Wopr_it Readme.txt README.md LICENSE package-windows/
             cp SDL2.dll SDL2_mixer.dll SDL2_ttf.dll iconv.dll libbz2-1.dll libfreetype-6.dll libgcc_s_seh-1.dll libglib-2.0-0.dll libharfbuzz-0.dll libintl-8.dll libpcre2-8-0.dll libpng16-16.dll libwinpthread-1.dll zlib1.dll package-windows/
             cp artifacts/wargame-windows-x64/wargame.exe package-windows/
             cd package-windows && zip -r ../WarGames-Windows-x64.zip . && cd ..
@@ -124,7 +124,7 @@ jobs:
         run: |
           if [ -f artifacts/wargame-linux-x86_64/wargame-linux-x86_64 ]; then
             mkdir -p package-linux
-            cp -r Gfx Gfx_it Snd Vid Wopr Wopr_it Readme.txt README.md package-linux/
+            cp -r Gfx Gfx_it Snd Vid Wopr Wopr_it Readme.txt README.md LICENSE package-linux/
             cp artifacts/wargame-linux-x86_64/wargame-linux-x86_64 package-linux/wargame-linux
             chmod +x package-linux/wargame-linux
             tar -czf WarGames-Linux-x86_64.tar.gz -C package-linux .
@@ -134,7 +134,7 @@ jobs:
         run: |
           if [ -f artifacts/wargame-macos/wargame-macos ]; then
             mkdir -p package-macos
-            cp -r Gfx Gfx_it Snd Vid Wopr Wopr_it Readme.txt README.md package-macos/
+            cp -r Gfx Gfx_it Snd Vid Wopr Wopr_it Readme.txt README.md LICENSE package-macos/
             cp artifacts/wargame-macos/wargame-macos package-macos/wargame-macos
             chmod +x package-macos/wargame-macos
             cd package-macos && zip -r ../WarGames-macOS.zip . && cd ..
