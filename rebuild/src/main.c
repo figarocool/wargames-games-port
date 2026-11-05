@@ -1709,6 +1709,7 @@ static void start_stage(App *a, Stage stage, const char *background) {
 static void start_intro(App *a) {
     a->stage = INTRO;
     a->intro_started = SDL_GetTicks() + 2600u;
+    set_background(a, "Warintsc");
     snprintf(a->deferred_voice, sizeof(a->deferred_voice), "%s", "Warintro");
     a->deferred_voice_deadline = a->intro_started;
     stage_prompt(a);
@@ -2526,17 +2527,17 @@ static void render(App *a) {
         return;
     }
     if (a->stage == INTRO) {
-        int32_t elapsed = (int32_t)(SDL_GetTicks() - a->intro_started);
-        if (elapsed < 0) {
-            present_rendered_frame(a);
-            return;
-        }
         if (a->background) {
             int width = 0, height = 0;
             SDL_QueryTexture(a->background, NULL, NULL, &width, &height);
             SDL_Rect title = width == 768 && height == 576
                 ? (SDL_Rect){16, 0, 768, 576} : (SDL_Rect){0, 0, W, H};
             SDL_RenderCopy(a->renderer, a->background, NULL, &title);
+        }
+        int32_t elapsed = (int32_t)(SDL_GetTicks() - a->intro_started);
+        if (elapsed < 0) {
+            present_rendered_frame(a);
+            return;
         }
         SDL_SetRenderDrawColor(a->renderer, 0, 0, 0, 255);
         SDL_Rect banner_strip = {0, 568, W, 32};

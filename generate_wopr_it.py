@@ -10,8 +10,6 @@ TMP_WAV = "/tmp/wopr_temp.wav"
 os.makedirs(TARGET_DIR, exist_ok=True)
 
 phrases = {
-    "Warhello": "Saluti Professor Falken.",
-    "Warsfm": "Come sta oggi?",
     "Warytd": "Sì, lo fanno.",
     "Warswpag": "Giochiamo a qualcosa?",
     "Wartwtg": "Per vincere la partita.",
@@ -35,12 +33,12 @@ phrases = {
     "Warsin": "Giochiamo a qualcosa?"
 }
 
-# Copy music / non-speech files directly
-for music_file in ["Warintro.dat", "Warend.dat"]:
-    src = os.path.join(ORIGINAL_DIR, music_file)
-    dst = os.path.join(TARGET_DIR, music_file)
+# Copy music / scan sound files directly
+for original_file in ["Warintro.dat", "Warend.dat", "Warhello.dat", "Warsfm.dat"]:
+    src = os.path.join(ORIGINAL_DIR, original_file)
+    dst = os.path.join(TARGET_DIR, original_file)
     shutil.copyfile(src, dst)
-    print(f"Copied soundtrack: {music_file}")
+    print(f"Copied audio asset: {original_file}")
 
 # Synthesize all spoken dialogue lines
 for name, text in phrases.items():
