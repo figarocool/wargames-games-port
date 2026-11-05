@@ -489,13 +489,40 @@ static const LogonStep script_list_games[] = {
     {"GLOBAL THERMONUCLEAR WAR", 0, 1500, 1, "Warlstgm", 8, 0}
 };
 
+static const LogonStep script_list_games_it[] = {
+    {"LABIRINTO DI FALKEN", 1000, 750, 0, NULL, 0, 0},
+    {"BLACKJACK", 0, 750, 0, NULL, 0, 0},
+    {"GIN RAMINO", 0, 750, 0, NULL, 0, 0},
+    {"CUORI", 0, 900, 0, NULL, 0, 0},
+    {"BRIDGE", 0, 900, 0, NULL, 0, 0},
+    {"DAMA", 0, 850, 0, NULL, 0, 0},
+    {"SCACCHI", 0, 900, 0, NULL, 0, 0},
+    {"POKER", 0, 900, 0, NULL, 0, 0},
+    {"COMBATTIMENTO AEREO", 0, 750, 0, NULL, 0, 0},
+    {"GUERRIGLIA", 0, 750, 0, NULL, 0, 0},
+    {"GUERRA NEL DESERTO", 0, 750, 0, NULL, 0, 0},
+    {"AZIONI ARIA-TERRA", 0, 750, 0, NULL, 0, 0},
+    {"GUERRA TATTICA TEATRALE", 0, 750, 0, NULL, 0, 0},
+    {"GUERRA CHIMICA E BIOTOSSICA TEATRALE", 0, 1000, 0, NULL, 0, 0},
+    {"GUERRA TERMONUCLEARE GLOBALE", 0, 1500, 1, "Warlstgm", 8, 0}
+};
+
 static const LogonStep script_help[] = {
     {"HELP NOT AVAILABLE.", 0, 300, 0, NULL, 0, 0}
+};
+
+static const LogonStep script_help_it[] = {
+    {"AIUTO NON DISPONIBILE.", 0, 300, 0, NULL, 0, 0}
 };
 
 static const LogonStep script_games[] = {
     {"'GAMES' REFERS TO MODELS, SIMULATIONS AND GAMES", 0, 100, 0, NULL, 0, 0},
     {"WHICH HAVE TACTICAL AND STRATEGIC APPLICATIONS.", 0, 300, 0, NULL, 0, 0}
+};
+
+static const LogonStep script_games_it[] = {
+    {"'GIOCHI' SI RIFERISCE A MODELLI, SIMULAZIONI E GIOCHI", 0, 100, 0, NULL, 0, 0},
+    {"CHE HANNO APPLICAZIONI TATTICHE E STRATEGICHE.", 0, 300, 0, NULL, 0, 0}
 };
 
 static const LogonStep script_franco[] = {
@@ -1499,21 +1526,39 @@ static void stage_prompt(App *a) {
         }
         break;
     case LIST_GAMES:
-        push_line(a, "FALKEN'S MAZE");
-        push_line(a, "BLACKJACK");
-        push_line(a, "GIN RUMMY");
-        push_line(a, "HEARTS");
-        push_line(a, "BRIDGE");
-        push_line(a, "CHECKERS");
-        push_line(a, "CHESS");
-        push_line(a, "POKER");
-        push_line(a, "FIGHTER COMBAT");
-        push_line(a, "GUERILLA ENGAGEMENT");
-        push_line(a, "DESERT WARFARE");
-        push_line(a, "AIR-TO-GROUND ACTIONS");
-        push_line(a, "THEATERWIDE TACTICAL WARFARE");
-        push_line(a, "THEATERWIDE BIOTOXIC AND CHEMICAL WARFARE");
-        push_line(a, "GLOBAL THERMONUCLEAR WAR");
+        if (a->lang == LANG_IT) {
+            push_line(a, "LABIRINTO DI FALKEN");
+            push_line(a, "BLACKJACK");
+            push_line(a, "GIN RAMINO");
+            push_line(a, "CUORI");
+            push_line(a, "BRIDGE");
+            push_line(a, "DAMA");
+            push_line(a, "SCACCHI");
+            push_line(a, "POKER");
+            push_line(a, "COMBATTIMENTO AEREO");
+            push_line(a, "GUERRIGLIA");
+            push_line(a, "GUERRA NEL DESERTO");
+            push_line(a, "AZIONI ARIA-TERRA");
+            push_line(a, "GUERRA TATTICA TEATRALE");
+            push_line(a, "GUERRA CHIMICA E BIOTOSSICA TEATRALE");
+            push_line(a, "GUERRA TERMONUCLEARE GLOBALE");
+        } else {
+            push_line(a, "FALKEN'S MAZE");
+            push_line(a, "BLACKJACK");
+            push_line(a, "GIN RUMMY");
+            push_line(a, "HEARTS");
+            push_line(a, "BRIDGE");
+            push_line(a, "CHECKERS");
+            push_line(a, "CHESS");
+            push_line(a, "POKER");
+            push_line(a, "FIGHTER COMBAT");
+            push_line(a, "GUERILLA ENGAGEMENT");
+            push_line(a, "DESERT WARFARE");
+            push_line(a, "AIR-TO-GROUND ACTIONS");
+            push_line(a, "THEATERWIDE TACTICAL WARFARE");
+            push_line(a, "THEATERWIDE BIOTOXIC AND CHEMICAL WARFARE");
+            push_line(a, "GLOBAL THERMONUCLEAR WAR");
+        }
         break;
     case GAME_SHELL: push_line(a, "LOGON:"); break;
     case CHESS: push_line(a, a->lang == LANG_IT ? "NON PREFERISCE UNA BELLA PARTITA A SCACCHI?" : "HOW ABOUT A NICE GAME OF CHESS?"); break;
@@ -1867,12 +1912,15 @@ static void submit(App *a) {
         a->input[0] = 0;
         if (strcmp(s, "joshua") == 0) {
             start_logon_script(a, script_joshua, (int)(sizeof(script_joshua) / sizeof(script_joshua[0])), cur_row + 1);
-        } else if (strcmp(s, "list games") == 0) {
-            start_logon_script(a, script_list_games, (int)(sizeof(script_list_games) / sizeof(script_list_games[0])), cur_row + 1);
-        } else if (strcmp(s, "help") == 0) {
-            start_logon_script(a, script_help, (int)(sizeof(script_help) / sizeof(script_help[0])), cur_row + 1);
-        } else if (strcmp(s, "games") == 0 || strcmp(s, "help games") == 0) {
-            start_logon_script(a, script_games, (int)(sizeof(script_games) / sizeof(script_games[0])), cur_row + 1);
+        } else if (strcmp(s, "list games") == 0 || (a->lang == LANG_IT && (strcmp(s, "lista giochi") == 0 || strcmp(s, "elenco giochi") == 0))) {
+            const LogonStep *script = a->lang == LANG_IT ? script_list_games_it : script_list_games;
+            start_logon_script(a, script, (int)(sizeof(script_list_games) / sizeof(script_list_games[0])), cur_row + 1);
+        } else if (strcmp(s, "help") == 0 || (a->lang == LANG_IT && strcmp(s, "aiuto") == 0)) {
+            const LogonStep *script = a->lang == LANG_IT ? script_help_it : script_help;
+            start_logon_script(a, script, (int)(sizeof(script_help) / sizeof(script_help[0])), cur_row + 1);
+        } else if (strcmp(s, "games") == 0 || strcmp(s, "help games") == 0 || (a->lang == LANG_IT && (strcmp(s, "giochi") == 0 || strcmp(s, "aiuto giochi") == 0))) {
+            const LogonStep *script = a->lang == LANG_IT ? script_games_it : script_games;
+            start_logon_script(a, script, (int)(sizeof(script_games) / sizeof(script_games[0])), cur_row + 1);
         } else if (strcmp(s, "franco") == 0) {
             start_logon_script(a, script_franco, (int)(sizeof(script_franco) / sizeof(script_franco[0])), cur_row + 1);
         } else {
@@ -2000,11 +2048,11 @@ static void submit(App *a) {
         start_caption_sequence(a, CAPTIONS_FBI_TAIL, NORAD_PRELUDE, "Wargisld");
         break;
     case LOGON_FINAL:
-        if (has(s, "tic tac toe") || has(s, "tic-tac-toe")) {
+        if (has(s, "tic tac toe") || has(s, "tic-tac-toe") || has(s, "tris")) {
             start_stage(a, TIC_TAC_TOE, "");
-        } else if (has(s, "list games")) {
+        } else if (has(s, "list games") || has(s, "lista giochi") || has(s, "elenco giochi")) {
             start_stage(a, LIST_GAMES, NULL);
-        } else if (has(s, "chess") && !a->played_chess) {
+        } else if ((has(s, "chess") || has(s, "scacchi")) && !a->played_chess) {
             static const char *const clip[] = {"War5"};
             a->played_chess = 1;
             media_sound(&a->audio, "Waracdnd");
@@ -2014,31 +2062,36 @@ static void submit(App *a) {
             a->played_poker = 1;
             media_sound(&a->audio, "Waracdnd");
             start_video_sequence(a, clip, 1, LOGON_FINAL, "", CAPTIONS_NONE);
-        } else if ((has(s, "global") || has(s, "theaterwide")) && !a->played_global_war) {
+        } else if ((has(s, "global") || has(s, "theaterwide") || has(s, "termonucleare") || has(s, "teatrale")) && !a->played_global_war) {
             static const char *const clip[] = {"War6"};
             a->played_global_war = 1;
             media_sound(&a->audio, "Wargrr");
             start_video_sequence(a, clip, 1, LOGON_FINAL, "", CAPTIONS_NONE);
-        } else if (has(s, "help")) {
-            push_line(a, "HELP NOT AVAILABLE.");
+        } else if (has(s, "help") || has(s, "aiuto")) {
+            push_line(a, a->lang == LANG_IT ? "AIUTO NON DISPONIBILE." : "HELP NOT AVAILABLE.");
         } else {
             media_sound(&a->audio, "Waracdnd");
-            push_line(a, "** IMPROPER REQUEST **");
-            push_line(a, "** ACCESS DENIED **");
+            if (a->lang == LANG_IT) {
+                push_line(a, "** RICHIESTA NON VALIDA **");
+                push_line(a, "** ACCESSO NEGATO **");
+            } else {
+                push_line(a, "** IMPROPER REQUEST **");
+                push_line(a, "** ACCESS DENIED **");
+            }
         }
         break;
     case LIST_GAMES:
-        if (has(s, "tic tac toe") || has(s, "tic-tac-toe")) {
+        if (has(s, "tic tac toe") || has(s, "tic-tac-toe") || has(s, "tris")) {
             a->tic_index = 0;
             a->tic_mark = 0;
             a->tic_player_count = 0;
             start_stage(a, TIC_TAC_TOE, "");
-        } else if (has(s, "list games")) {
+        } else if (has(s, "list games") || has(s, "lista giochi") || has(s, "elenco giochi")) {
             a->line_count = 0;
             a->game_list_waiting = 1;
             a->game_list_deadline = SDL_GetTicks() + 500u;
             media_sound(&a->audio, "Warlstgm");
-        } else if (has(s, "chess") && !a->played_chess) {
+        } else if ((has(s, "chess") || has(s, "scacchi")) && !a->played_chess) {
             static const char *const clip[] = {"War5"};
             a->played_chess = 1;
             media_sound(&a->audio, "Waracdnd");
@@ -2048,15 +2101,20 @@ static void submit(App *a) {
             a->played_poker = 1;
             media_sound(&a->audio, "Waracdnd");
             start_video_sequence(a, clip, 1, LIST_GAMES, "", CAPTIONS_NONE);
-        } else if ((has(s, "global") || has(s, "theaterwide")) && !a->played_global_war) {
+        } else if ((has(s, "global") || has(s, "theaterwide") || has(s, "termonucleare") || has(s, "teatrale")) && !a->played_global_war) {
             static const char *const clip[] = {"War6"};
             a->played_global_war = 1;
             media_sound(&a->audio, "Wargrr");
             start_video_sequence(a, clip, 1, LIST_GAMES, "", CAPTIONS_NONE);
         } else if (s[0]) {
             media_sound(&a->audio, "Waracdnd");
-            push_line(a, "** IMPROPER REQUEST **");
-            push_line(a, "** ACCESS DENIED **");
+            if (a->lang == LANG_IT) {
+                push_line(a, "** RICHIESTA NON VALIDA **");
+                push_line(a, "** ACCESSO NEGATO **");
+            } else {
+                push_line(a, "** IMPROPER REQUEST **");
+                push_line(a, "** ACCESS DENIED **");
+            }
         }
         break;
     case CHESS:
