@@ -4,6 +4,7 @@
 #include <X11/Xlib.h>
 #include <ctype.h>
 #include "media.h"
+#include "extended/extended.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +34,8 @@ typedef enum {
     CHESS, TIC_TAC_TOE, TIC_MARK, TIC_MOVE, TIC_ANIMATION, TIC_AGAIN, ENDING_PRELUDE,
     FINAL_GREETING, ENDING,
     NORAD_PRELUDE, NORAD_CLIP_2, NORAD_CLIP_3, NORAD_CLIP_4,
-    ENDING_CHESS, ENDING_MUSIC
+    ENDING_CHESS, ENDING_MUSIC,
+    EXT_BANK_HACK, EXT_PANAM, EXT_CHESS, EXT_MAZE, EXT_BLACKJACK, EXT_POKER
 } Stage;
 
 typedef struct {
@@ -70,7 +72,8 @@ typedef struct {
     int action; /* 0 = continue, 1 = exit game, 2 = start network status */
 } LogonStep;
 
-typedef struct {
+typedef struct App {
+    int extended_mode;
     SDL_Window *window;
     SDL_Renderer *renderer;
     TTF_Font *font;
@@ -1331,6 +1334,7 @@ static void advance_story_caption(App *a) {
 static void stage_prompt(App *a) {
     switch (a->stage) {
     case SELECT_LANGUAGE: break;
+    case EXT_BANK_HACK: case EXT_PANAM: case EXT_CHESS: case EXT_MAZE: case EXT_BLACKJACK: case EXT_POKER: break;
     case INTRO: break;
     case PHONE: case SCANNING:
         break;
@@ -1621,8 +1625,17 @@ static void start_stage(App *a, Stage stage, const char *background) {
         stage == DIAL_DEPARTURE || stage == DIAL_PASSENGER || stage == DIAL_TICKET ||
         stage == MODEM_CONNECT || stage == SIDE || stage == LOGON || stage == GREETING ||
         stage == LOGON_AGAIN || stage == LOGON_FINAL || stage == LOGON_REJECTED ||
-        stage == GAME_SHELL)
+        stage == GAME_SHELL || stage == EXT_BANK_HACK || stage == EXT_PANAM ||
+        stage == EXT_CHESS || stage == EXT_MAZE || stage == EXT_BLACKJACK || stage == EXT_POKER) {
         a->line_count = 0;
+        a->input[0] = 0;
+    }
+    if (stage == EXT_BANK_HACK) ext_bank_init(a);
+    else if (stage == EXT_PANAM) ext_panam_init(a);
+    else if (stage == EXT_CHESS) ext_chess_init(a);
+    else if (stage == EXT_MAZE) ext_maze_init(a);
+    else if (stage == EXT_BLACKJACK) ext_cards_init(a, 0);
+    else if (stage == EXT_POKER) ext_cards_init(a, 1);
     if (stage != LIST_GAMES) a->game_list_waiting = 0;
     if (stage == DIAL_NUMBERS) {
         a->carrier_selection = 7;
@@ -1810,8 +1823,10 @@ static void submit(App *a) {
         fprintf(stderr, "submit stage=%d input=[%s]\n", (int)a->stage, a->input);
     if (!*s && a->stage != PHONE && a->stage != SCANNING &&
         a->stage != DIAL_NUMBERS && a->stage != DIAL_TICKET && a->stage != PLAY &&
-        a->stage != CHESS_REFUSAL && a->stage != LATER) return;
-    if (*s && a->stage != LOGON) {
+        a->stage != CHESS_REFUSAL && a->stage != LATER &&
+        a->stage != EXT_BANK_HACK && a->stage != EXT_PANAM && a->stage != EXT_CHESS &&
+        a->stage != EXT_MAZE && a->stage != EXT_BLACKJACK && a->stage != EXT_POKER) return;
+    if (*s && a->stage != LOGON && a->stage < EXT_BANK_HACK) {
         char echo[LINE_LEN];
         if (a->stage == LOGON_FINAL || a->stage == LIST_GAMES)
             snprintf(echo, sizeof(echo), "LOGON: %.232s", a->input);
@@ -1821,6 +1836,12 @@ static void submit(App *a) {
     if (a->stage != LOGON) a->input[0] = 0;
 
     switch (a->stage) {
+    case EXT_BANK_HACK: ext_bank_submit(a, response); break;
+    case EXT_PANAM: ext_panam_submit(a, response); break;
+    case EXT_CHESS: ext_chess_submit(a, response); break;
+    case EXT_MAZE: ext_maze_submit(a, response); break;
+    case EXT_BLACKJACK: ext_cards_submit(a, response); break;
+    case EXT_POKER: ext_cards_submit(a, response); break;
     case SELECT_LANGUAGE:
         break;
     case INTRO:
@@ -1851,7 +1872,8 @@ static void submit(App *a) {
         }
         else if (a->carrier_selection == 8) {
             media_dial(&a->audio, 0);
-            start_stage(a, DIAL_MENU, "");
+            if (a->extended_mode) start_stage(a, EXT_PANAM, "");
+            else start_stage(a, DIAL_MENU, "");
         } else if (a->carrier_selection == 9) {
             media_dial(&a->audio, 1);
             start_stage(a, LOGON, "");
@@ -1954,7 +1976,8 @@ static void submit(App *a) {
         break;
     case PLAY:
         if (has(s, "chess") || has(s, "scacchi")) {
-            start_stage(a, CHESS_REFUSAL, NULL);
+            if (a->extended_mode) start_stage(a, EXT_CHESS, "");
+            else start_stage(a, CHESS_REFUSAL, NULL);
         } else if (has(s, "war") || has(s, "guerra") || has(s, "termonucleare") || has(s, "thermonuclear")) {
             start_stage(a, SIMULATION_ACCEPTED, NULL);
         } else if (starts(s, "lov") || starts(s, "let") || starts(s, "ye") ||
@@ -1969,10 +1992,12 @@ static void submit(App *a) {
         if (*s) start_stage(a, SIMULATION_ACCEPTED, NULL);
         break;
     case LATER:
-        if (has(s, "chess") || has(s, "scacchi") || starts(s, "si") || starts(s, "sì") || starts(s, "ye"))
-            start_stage(a, CHESS_REFUSAL, NULL);
-        else if (*s)
+        if (has(s, "chess") || has(s, "scacchi") || starts(s, "si") || starts(s, "sì") || starts(s, "ye")) {
+            if (a->extended_mode) start_stage(a, EXT_CHESS, "");
+            else start_stage(a, CHESS_REFUSAL, NULL);
+        } else if (*s) {
             start_stage(a, SIMULATION_ACCEPTED, NULL);
+        }
         break;
     case SIDE:
         /* FUN_0040fcb0(2) keeps waiting until the numeric input converts to 2. */
@@ -2052,23 +2077,45 @@ static void submit(App *a) {
             start_stage(a, TIC_TAC_TOE, "");
         } else if (has(s, "list games") || has(s, "lista giochi") || has(s, "elenco giochi")) {
             start_stage(a, LIST_GAMES, NULL);
-        } else if ((has(s, "chess") || has(s, "scacchi")) && !a->played_chess) {
-            static const char *const clip[] = {"War5"};
-            a->played_chess = 1;
-            media_sound(&a->audio, "Waracdnd");
-            start_video_sequence(a, clip, 1, LOGON_FINAL, "", CAPTIONS_NONE);
-        } else if (has(s, "poker") && !a->played_poker) {
-            static const char *const clip[] = {"War7"};
-            a->played_poker = 1;
-            media_sound(&a->audio, "Waracdnd");
-            start_video_sequence(a, clip, 1, LOGON_FINAL, "", CAPTIONS_NONE);
+        } else if (has(s, "chess") || has(s, "scacchi")) {
+            if (a->extended_mode) {
+                start_stage(a, EXT_CHESS, "");
+            } else if (!a->played_chess) {
+                static const char *const clip[] = {"War5"};
+                a->played_chess = 1;
+                media_sound(&a->audio, "Waracdnd");
+                start_video_sequence(a, clip, 1, LOGON_FINAL, "", CAPTIONS_NONE);
+            }
+        } else if (a->extended_mode && (has(s, "falken") || has(s, "maze") || has(s, "labirinto"))) {
+            start_stage(a, EXT_MAZE, "");
+        } else if (a->extended_mode && (has(s, "blackjack") || has(s, "black jack"))) {
+            start_stage(a, EXT_BLACKJACK, "");
+        } else if (has(s, "poker")) {
+            if (a->extended_mode) {
+                start_stage(a, EXT_POKER, "");
+            } else if (!a->played_poker) {
+                static const char *const clip[] = {"War7"};
+                a->played_poker = 1;
+                media_sound(&a->audio, "Waracdnd");
+                start_video_sequence(a, clip, 1, LOGON_FINAL, "", CAPTIONS_NONE);
+            }
         } else if ((has(s, "global") || has(s, "theaterwide") || has(s, "termonucleare") || has(s, "teatrale")) && !a->played_global_war) {
             static const char *const clip[] = {"War6"};
             a->played_global_war = 1;
             media_sound(&a->audio, "Wargrr");
             start_video_sequence(a, clip, 1, LOGON_FINAL, "", CAPTIONS_NONE);
         } else if (has(s, "help") || has(s, "aiuto")) {
-            push_line(a, a->lang == LANG_IT ? "AIUTO NON DISPONIBILE." : "HELP NOT AVAILABLE.");
+            if (a->extended_mode) {
+                if (a->lang == LANG_IT) {
+                    push_line(a, "EDIZIONE ESTESA - GIOCHI SBLOCCATI:");
+                    push_line(a, "SCACCHI | LABIRINTO | BLACKJACK | POKER | TRIS | GUERRA TERMONUCLEARE");
+                } else {
+                    push_line(a, "EXTENDED EDITION - UNLOCKED GAMES:");
+                    push_line(a, "CHESS | FALKEN'S MAZE | BLACKJACK | POKER | TIC TAC TOE | GLOBAL WAR");
+                }
+            } else {
+                push_line(a, a->lang == LANG_IT ? "AIUTO NON DISPONIBILE." : "HELP NOT AVAILABLE.");
+            }
         } else {
             media_sound(&a->audio, "Waracdnd");
             if (a->lang == LANG_IT) {
@@ -2091,21 +2138,45 @@ static void submit(App *a) {
             a->game_list_waiting = 1;
             a->game_list_deadline = SDL_GetTicks() + 500u;
             media_sound(&a->audio, "Warlstgm");
-        } else if ((has(s, "chess") || has(s, "scacchi")) && !a->played_chess) {
-            static const char *const clip[] = {"War5"};
-            a->played_chess = 1;
-            media_sound(&a->audio, "Waracdnd");
-            start_video_sequence(a, clip, 1, LIST_GAMES, "", CAPTIONS_NONE);
-        } else if (has(s, "poker") && !a->played_poker) {
-            static const char *const clip[] = {"War7"};
-            a->played_poker = 1;
-            media_sound(&a->audio, "Waracdnd");
-            start_video_sequence(a, clip, 1, LIST_GAMES, "", CAPTIONS_NONE);
+        } else if (has(s, "chess") || has(s, "scacchi")) {
+            if (a->extended_mode) {
+                start_stage(a, EXT_CHESS, "");
+            } else if (!a->played_chess) {
+                static const char *const clip[] = {"War5"};
+                a->played_chess = 1;
+                media_sound(&a->audio, "Waracdnd");
+                start_video_sequence(a, clip, 1, LIST_GAMES, "", CAPTIONS_NONE);
+            }
+        } else if (a->extended_mode && (has(s, "falken") || has(s, "maze") || has(s, "labirinto"))) {
+            start_stage(a, EXT_MAZE, "");
+        } else if (a->extended_mode && (has(s, "blackjack") || has(s, "black jack"))) {
+            start_stage(a, EXT_BLACKJACK, "");
+        } else if (has(s, "poker")) {
+            if (a->extended_mode) {
+                start_stage(a, EXT_POKER, "");
+            } else if (!a->played_poker) {
+                static const char *const clip[] = {"War7"};
+                a->played_poker = 1;
+                media_sound(&a->audio, "Waracdnd");
+                start_video_sequence(a, clip, 1, LIST_GAMES, "", CAPTIONS_NONE);
+            }
         } else if ((has(s, "global") || has(s, "theaterwide") || has(s, "termonucleare") || has(s, "teatrale")) && !a->played_global_war) {
             static const char *const clip[] = {"War6"};
             a->played_global_war = 1;
             media_sound(&a->audio, "Wargrr");
             start_video_sequence(a, clip, 1, LIST_GAMES, "", CAPTIONS_NONE);
+        } else if (has(s, "help") || has(s, "aiuto")) {
+            if (a->extended_mode) {
+                if (a->lang == LANG_IT) {
+                    push_line(a, "EDIZIONE ESTESA - GIOCHI SBLOCCATI:");
+                    push_line(a, "SCACCHI | LABIRINTO | BLACKJACK | POKER | TRIS | GUERRA TERMONUCLEARE");
+                } else {
+                    push_line(a, "EXTENDED EDITION - UNLOCKED GAMES:");
+                    push_line(a, "CHESS | FALKEN'S MAZE | BLACKJACK | POKER | TIC TAC TOE | GLOBAL WAR");
+                }
+            } else {
+                push_line(a, a->lang == LANG_IT ? "AIUTO NON DISPONIBILE." : "HELP NOT AVAILABLE.");
+            }
         } else if (s[0]) {
             media_sound(&a->audio, "Waracdnd");
             if (a->lang == LANG_IT) {
@@ -2383,20 +2454,74 @@ static void present_rendered_frame(App *a) {
     SDL_RenderPresent(a->renderer);
 }
 
+void app_draw_text(App *a, const char *text, int x, int y, SDL_Color color) {
+    draw_text(a, text, x, y, color);
+}
+void app_draw_block_cursor(App *a, int x, int y, SDL_Color color) {
+    draw_block_cursor(a, x, y, color);
+}
+void app_start_stage(App *a, int stage, const char *background) {
+    start_stage(a, (Stage)stage, background);
+}
+void app_play_sound(App *a, const char *name) {
+    media_sound(&a->audio, name);
+}
+int app_get_lang(const App *a) {
+    return a->lang == LANG_IT ? 1 : 0;
+}
+const char *app_get_input(const App *a) {
+    return a->input;
+}
+void app_clear_input(App *a) {
+    a->input[0] = 0;
+}
+void app_present_frame(App *a) {
+    present_rendered_frame(a);
+}
+
 static void render(App *a) {
     SDL_SetRenderDrawColor(a->renderer, 0, 0, 0, 255);
     SDL_RenderClear(a->renderer);
     if (a->stage == SELECT_LANGUAGE) {
         SDL_Color cyan = {131, 237, 240, 255};
         SDL_Color green = {105, 255, 184, 255};
-        draw_text(a, "==================================================", 160, 160, cyan);
-        draw_text(a, "              WARGAMES / GIOCHI DI GUERRA         ", 160, 180, cyan);
-        draw_text(a, "==================================================", 160, 200, cyan);
-        draw_text(a, "SELECT LANGUAGE / SCEGLI LA LINGUA:", 200, 260, green);
-        draw_text(a, "1. ENGLISH", 240, 310, cyan);
-        draw_text(a, "2. ITALIANO", 240, 340, cyan);
-        draw_text(a, "ENTER CHOICE [1-2] / SCEGLI [1-2]: ", 200, 400, green);
-        draw_block_cursor(a, 480, 400, cyan);
+        SDL_Color amber = {255, 191, 0, 255};
+        SDL_Color white = {255, 255, 255, 255};
+        draw_text(a, "============================================================", 120, 110, cyan);
+        draw_text(a, "         WARGAMES (1983/1995) - SYSTEM ARCHITECTURE         ", 120, 130, amber);
+        draw_text(a, "============================================================", 120, 150, cyan);
+        draw_text(a, "SELECT VERSION & LANGUAGE / SCEGLI VERSIONE E LINGUA:", 140, 195, green);
+        draw_text(a, "1. ITALIANO - VERSIONE ORIGINALE (1995 FEDELE)", 160, 235, cyan);
+        draw_text(a, "2. ITALIANO - EDIZIONE ESTESA (TUTTI I GIOCHI & BACKDOOR)", 160, 265, white);
+        draw_text(a, "3. ENGLISH  - ORIGINAL VERSION (1995 FAITHFUL)", 160, 295, cyan);
+        draw_text(a, "4. ENGLISH  - EXTENDED EDITION (ALL PLAYABLE GAMES & BACKDOORS)", 160, 325, white);
+        draw_text(a, "ENTER CHOICE [1-4] / SCEGLI [1-4]: ", 140, 385, green);
+        draw_block_cursor(a, 420, 385, cyan);
+        present_rendered_frame(a);
+        return;
+    }
+    if (a->stage == EXT_BANK_HACK) {
+        ext_bank_render(a);
+        present_rendered_frame(a);
+        return;
+    }
+    if (a->stage == EXT_PANAM) {
+        ext_panam_render(a);
+        present_rendered_frame(a);
+        return;
+    }
+    if (a->stage == EXT_CHESS) {
+        ext_chess_render(a);
+        present_rendered_frame(a);
+        return;
+    }
+    if (a->stage == EXT_MAZE) {
+        ext_maze_render(a);
+        present_rendered_frame(a);
+        return;
+    }
+    if (a->stage == EXT_BLACKJACK || a->stage == EXT_POKER) {
+        ext_cards_render(a);
         present_rendered_frame(a);
         return;
     }
@@ -3087,8 +3212,30 @@ int main(void) {
         else a.lang = LANG_EN;
         media_set_language(&a.audio, a.lang);
     }
+    const char *ext_env = getenv("WARGAME_EXTENDED");
+    if (ext_env && (strcmp(ext_env, "1") == 0 || strcmp(ext_env, "true") == 0)) {
+        a.extended_mode = 1;
+    }
     const char *compare_start = getenv("WARGAME_COMPARE_START");
-    if (compare_start && strcmp(compare_start, "carriers") == 0) {
+    if (compare_start && strcmp(compare_start, "bank-hack") == 0) {
+        a.extended_mode = 1;
+        start_stage(&a, EXT_BANK_HACK, "");
+    } else if (compare_start && strcmp(compare_start, "panam-ext") == 0) {
+        a.extended_mode = 1;
+        start_stage(&a, EXT_PANAM, "");
+    } else if (compare_start && strcmp(compare_start, "chess") == 0) {
+        a.extended_mode = 1;
+        start_stage(&a, EXT_CHESS, "");
+    } else if (compare_start && strcmp(compare_start, "maze") == 0) {
+        a.extended_mode = 1;
+        start_stage(&a, EXT_MAZE, "");
+    } else if (compare_start && strcmp(compare_start, "blackjack") == 0) {
+        a.extended_mode = 1;
+        start_stage(&a, EXT_BLACKJACK, "");
+    } else if (compare_start && strcmp(compare_start, "poker") == 0) {
+        a.extended_mode = 1;
+        start_stage(&a, EXT_POKER, "");
+    } else if (compare_start && strcmp(compare_start, "carriers") == 0) {
         start_stage(&a, DIAL_NUMBERS, "");
     } else if (compare_start && strcmp(compare_start, "network-status") == 0) {
         start_network_status(&a);
@@ -3157,13 +3304,29 @@ int main(void) {
             else if (event.type == SDL_KEYDOWN) {
                 if (a.stage == SELECT_LANGUAGE) {
                     if (event.key.keysym.sym == SDLK_1 || event.key.keysym.sym == SDLK_KP_1) {
-                        a.lang = LANG_EN;
+                        a.lang = LANG_IT;
+                        a.extended_mode = 0;
                         media_set_language(&a.audio, a.lang);
                         if (has_completed_carrier_scan()) start_stage(&a, DIAL_NUMBERS, "");
                         else start_intro(&a);
                         continue;
                     } else if (event.key.keysym.sym == SDLK_2 || event.key.keysym.sym == SDLK_KP_2) {
                         a.lang = LANG_IT;
+                        a.extended_mode = 1;
+                        media_set_language(&a.audio, a.lang);
+                        if (has_completed_carrier_scan()) start_stage(&a, DIAL_NUMBERS, "");
+                        else start_intro(&a);
+                        continue;
+                    } else if (event.key.keysym.sym == SDLK_3 || event.key.keysym.sym == SDLK_KP_3) {
+                        a.lang = LANG_EN;
+                        a.extended_mode = 0;
+                        media_set_language(&a.audio, a.lang);
+                        if (has_completed_carrier_scan()) start_stage(&a, DIAL_NUMBERS, "");
+                        else start_intro(&a);
+                        continue;
+                    } else if (event.key.keysym.sym == SDLK_4 || event.key.keysym.sym == SDLK_KP_4) {
+                        a.lang = LANG_EN;
+                        a.extended_mode = 1;
                         media_set_language(&a.audio, a.lang);
                         if (has_completed_carrier_scan()) start_stage(&a, DIAL_NUMBERS, "");
                         else start_intro(&a);
@@ -3173,6 +3336,15 @@ int main(void) {
                         continue;
                     }
                     continue;
+                }
+                if (a.stage == EXT_MAZE) {
+                    if (event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_DOWN ||
+                        event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_RIGHT ||
+                        event.key.keysym.sym == SDLK_w || event.key.keysym.sym == SDLK_s ||
+                        event.key.keysym.sym == SDLK_a || event.key.keysym.sym == SDLK_d) {
+                        ext_maze_key(&a, event.key.keysym.sym);
+                        continue;
+                    }
                 }
                 if (a.stage == NETWORK_STATUS && a.network_phase == 3) {
                     if (event.key.keysym.sym == SDLK_RETURN ||
@@ -3281,13 +3453,29 @@ int main(void) {
                 }
                 if (a.stage == SELECT_LANGUAGE) {
                     if (event.text.text[0] == '1') {
-                        a.lang = LANG_EN;
+                        a.lang = LANG_IT;
+                        a.extended_mode = 0;
                         media_set_language(&a.audio, a.lang);
                         if (has_completed_carrier_scan()) start_stage(&a, DIAL_NUMBERS, "");
                         else start_intro(&a);
                         continue;
                     } else if (event.text.text[0] == '2') {
                         a.lang = LANG_IT;
+                        a.extended_mode = 1;
+                        media_set_language(&a.audio, a.lang);
+                        if (has_completed_carrier_scan()) start_stage(&a, DIAL_NUMBERS, "");
+                        else start_intro(&a);
+                        continue;
+                    } else if (event.text.text[0] == '3') {
+                        a.lang = LANG_EN;
+                        a.extended_mode = 0;
+                        media_set_language(&a.audio, a.lang);
+                        if (has_completed_carrier_scan()) start_stage(&a, DIAL_NUMBERS, "");
+                        else start_intro(&a);
+                        continue;
+                    } else if (event.text.text[0] == '4') {
+                        a.lang = LANG_EN;
+                        a.extended_mode = 1;
                         media_set_language(&a.audio, a.lang);
                         if (has_completed_carrier_scan()) start_stage(&a, DIAL_NUMBERS, "");
                         else start_intro(&a);
@@ -3341,8 +3529,10 @@ int main(void) {
         if (a.stage == DIAL_NUMBERS && a.bank_connecting &&
             SDL_GetTicks() - a.bank_connect_started >= 800u) {
             a.bank_connecting = 0;
-            start_stage(&a, BANK_PROMPT, "");
+            if (a.extended_mode) start_stage(&a, EXT_BANK_HACK, "");
+            else start_stage(&a, BANK_PROMPT, "");
         }
+        if (a.stage == EXT_BANK_HACK) update_bank_typewriter_audio(&a), ext_bank_update(&a);
         if (a.stage == BANK_PROMPT) update_bank_typewriter_audio(&a);
         if (a.stage == BANK_PROMPT && a.bank_key_pending &&
             SDL_GetTicks() - a.stage_started >= 480u)
