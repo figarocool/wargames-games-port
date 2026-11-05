@@ -1,19 +1,15 @@
-# Original game executable, runtime library, configuration, and media assets
+# Original Franco Togliatto binaries and config state
 /Wargames.exe
 /fmod.dll
 /Wargames.cfg
 /rebuild/Wargames.cfg*
-/Readme.txt
-/Gfx/
-!/Gfx/Warints2.dat
-/Snd/
-/Vid/
-/Wopr/
 
-# Reverse-engineering outputs and original-game-derived evidence
+# Reverse-engineering outputs and evidence
 /re/
 /rebuild/evidence/
 
 # Local build products
 /rebuild/wargame-c
+
+# Python cache
 /rebuild/tools/__pycache__/

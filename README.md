@@ -6,6 +6,26 @@ Originariamente programmato in FreeBASIC da **Franco Togliatto** (1995/2008), il
 
 ---
 
+## ⚡ Come Giocare Subito (Senza compilare)
+
+Tutti gli asset di gioco e i binari precompilati sono inclusi nel repository:
+
+- **Su Linux (64-bit):**
+  Basta avviare direttamente l'eseguibile:
+  ```bash
+  ./wargame-linux
+  ```
+- **Su Windows (64-bit):**
+  Basta fare doppio clic su:
+  ```text
+  wargame.exe
+  ```
+  *(Tutte le librerie SDL2 e le dipendenze DLL sono già fornite nella cartella).*
+- **Su macOS:**
+  I binari universali (Apple Silicon M1/M2/M3/M4 + Intel) vengono compilati e rilasciati automaticamente tramite **GitHub Actions** nella scheda *Releases* del repository.
+
+---
+
 ## 🚀 Requisiti di Sistema e Installazione
 
 Il gioco è compatibile con qualsiasi distribuzione Linux moderna (e compilabile su qualsiasi sistema POSIX provvisto di supporto SDL2 e X11).

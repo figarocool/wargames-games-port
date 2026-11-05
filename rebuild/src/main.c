@@ -1,7 +1,9 @@
 #define _POSIX_C_SOURCE 200809L
 #include <SDL.h>
 #include <SDL_ttf.h>
+#ifndef _WIN32
 #include <X11/Xlib.h>
+#endif
 #include <ctype.h>
 #include "media.h"
 #include "extended/extended.h"
@@ -2544,6 +2546,7 @@ static TTF_Font *open_font(void) {
 
 /* Ask SDL's X11 backend to use the server's default visual so RGB colors stay exact. */
 static void select_default_x11_visual(void) {
+#ifndef _WIN32
     Display *display = XOpenDisplay(NULL);
     if (!display) return;
     Visual *visual = DefaultVisual(display, DefaultScreen(display));
@@ -2552,6 +2555,7 @@ static void select_default_x11_visual(void) {
              (unsigned long)XVisualIDFromVisual(visual));
     SDL_SetHint(SDL_HINT_VIDEO_X11_WINDOW_VISUALID, visual_id);
     XCloseDisplay(display);
+#endif
 }
 
 static void render_network_status(App *a) {
@@ -3300,7 +3304,8 @@ static void render(App *a) {
 }
 
 /* Set up SDL, run the event loop, and release every audio/video/graphics resource. */
-int main(void) {
+int main(int argc, char *argv[]) {
+    (void)argc; (void)argv;
     App a = {0};
     a.running = 1;
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0 || TTF_Init() != 0) {

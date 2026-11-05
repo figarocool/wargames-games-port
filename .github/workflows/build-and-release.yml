@@ -1,0 +1,98 @@
+name: Build and Release WarGames
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ "v*" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libsdl2-dev libsdl2-ttf-dev libsdl2-mixer-dev libx11-dev fonts-pc ffmpeg
+
+      - name: Build Linux executable
+        run: |
+          make -C rebuild
+          cp rebuild/wargame-c ./wargame-linux-x86_64
+          chmod +x ./wargame-linux-x86_64
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wargame-linux-x86_64
+          path: ./wargame-linux-x86_64
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            git
+            make
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-pkg-config
+            mingw-w64-x86_64-SDL2
+            mingw-w64-x86_64-SDL2_mixer
+            mingw-w64-x86_64-SDL2_ttf
+
+      - name: Build Windows executable
+        shell: msys2 {0}
+        run: |
+          x86_64-w64-mingw32-gcc -O2 -std=c11 \
+            $(pkg-config --cflags sdl2 SDL2_ttf SDL2_mixer) \
+            -o wargame.exe \
+            rebuild/src/main.c rebuild/src/media.c \
+            rebuild/src/extended/bank_hack.c rebuild/src/extended/panam_extended.c rebuild/src/extended/games_extended.c \
+            -lmingw32 -lSDL2main $(pkg-config --libs sdl2 SDL2_ttf SDL2_mixer) -lm
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wargame-windows-x64
+          path: wargame.exe
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Homebrew dependencies
+        run: |
+          brew install sdl2 sdl2_ttf sdl2_mixer pkg-config
+
+      - name: Build macOS executable
+        run: |
+          clang -O2 -std=c11 \
+            $(pkg-config --cflags sdl2 SDL2_ttf SDL2_mixer) \
+            -o wargame-macos \
+            rebuild/src/main.c rebuild/src/media.c \
+            rebuild/src/extended/bank_hack.c rebuild/src/extended/panam_extended.c rebuild/src/extended/games_extended.c \
+            $(pkg-config --libs sdl2 SDL2_ttf SDL2_mixer) -lm
+          chmod +x ./wargame-macos
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wargame-macos
+          path: ./wargame-macos

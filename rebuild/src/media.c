@@ -3,12 +3,19 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef _WIN32
+#include <io.h>
+#define F_OK 0
+#define R_OK 4
+#else
+#include <signal.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#endif
 
 enum { VIDEO_WIDTH = 800, VIDEO_HEIGHT = 592, VIDEO_RATE = 25, AUDIO_RATE = 48000 };
 
@@ -157,12 +164,6 @@ void media_phone_ring(GameAudio *audio) {
     Mix_PlayMusic(audio->phone_ring, 0);
 }
 
-/* Make a decoder output pipe non-blocking so SDL keeps responding to input. */
-static int set_nonblocking(int fd) {
-    int flags = fcntl(fd, F_GETFL, 0);
-    return flags >= 0 && fcntl(fd, F_SETFL, flags | O_NONBLOCK) == 0;
-}
-
 /* Close a file descriptor once and mark it as unavailable. */
 static void close_fd(int *fd) {
     if (*fd >= 0) close(*fd);
@@ -173,6 +174,36 @@ static void close_fd(int *fd) {
 static void close_child_pipes(MediaPlayer *player) {
     close_fd(&player->video_pipe);
     close_fd(&player->audio_pipe);
+}
+
+#ifdef _WIN32
+int media_video_start(MediaPlayer *player, SDL_Renderer *renderer, const char *asset_name) {
+    (void)renderer; (void)asset_name;
+    memset(player, 0, sizeof(*player));
+    player->video_pipe = player->audio_pipe = -1;
+    player->failed = 1;
+    return 0;
+}
+
+int media_video_update(MediaPlayer *player) {
+    (void)player;
+    return 1;
+}
+
+void media_video_draw(MediaPlayer *player, SDL_Renderer *renderer) {
+    (void)player; (void)renderer;
+}
+
+void media_video_stop(MediaPlayer *player) {
+    if (!player) return;
+    player->decoder_pid = -1;
+    close_child_pipes(player);
+}
+#else
+/* Make a decoder output pipe non-blocking so SDL keeps responding to input. */
+static int set_nonblocking(int fd) {
+    int flags = fcntl(fd, F_GETFL, 0);
+    return flags >= 0 && fcntl(fd, F_SETFL, flags | O_NONBLOCK) == 0;
 }
 
 /* Fork FFmpeg to decode a game MPEG into raw video frames and PCM audio. */
@@ -339,6 +370,7 @@ void media_video_stop(MediaPlayer *player) {
     player->frame_pixels = NULL;
     player->frame_used = player->frame_size = 0;
 }
+#endif
 
 /* Return whether a decoder child is currently active. */
 int media_video_active(const MediaPlayer *player) {
