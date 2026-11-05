@@ -1625,7 +1625,7 @@ static void start_stage(App *a, Stage stage, const char *background) {
         stage == DIAL_DEPARTURE || stage == DIAL_PASSENGER || stage == DIAL_TICKET ||
         stage == MODEM_CONNECT || stage == SIDE || stage == LOGON || stage == GREETING ||
         stage == LOGON_AGAIN || stage == LOGON_FINAL || stage == LOGON_REJECTED ||
-        stage == GAME_SHELL || stage == EXT_BANK_HACK || stage == EXT_PANAM ||
+        stage == GAME_SHELL || stage == LIST_GAMES || stage == EXT_BANK_HACK || stage == EXT_PANAM ||
         stage == EXT_CHESS || stage == EXT_MAZE || stage == EXT_BLACKJACK || stage == EXT_POKER) {
         a->line_count = 0;
         a->input[0] = 0;
@@ -1979,9 +1979,22 @@ static void submit(App *a) {
         }
         break;
     case PLAY:
-        if (has(s, "chess") || has(s, "scacchi")) {
+        if (has(s, "list games") || has(s, "lista giochi") || has(s, "elenco giochi") ||
+            (a->extended_mode && (has(s, "games") || has(s, "giochi") || has(s, "help") || has(s, "aiuto")))) {
+            media_sound(&a->audio, "Warlstgm");
+            start_stage(a, LIST_GAMES, "");
+        } else if (has(s, "chess") || has(s, "scacchi")) {
             if (a->extended_mode) start_stage(a, EXT_CHESS, "");
             else start_stage(a, CHESS_REFUSAL, NULL);
+        } else if (a->extended_mode && (has(s, "falken") || has(s, "maze") || has(s, "labirinto"))) {
+            start_stage(a, EXT_MAZE, "");
+        } else if (a->extended_mode && (has(s, "blackjack") || has(s, "black jack"))) {
+            start_stage(a, EXT_BLACKJACK, "");
+        } else if (has(s, "poker")) {
+            if (a->extended_mode) start_stage(a, EXT_POKER, "");
+            else start_stage(a, LATER, NULL);
+        } else if (has(s, "tic tac toe") || has(s, "tic-tac-toe") || has(s, "tris")) {
+            start_stage(a, TIC_TAC_TOE, "");
         } else if (has(s, "war") || has(s, "guerra") || has(s, "termonucleare") || has(s, "thermonuclear")) {
             start_stage(a, SIMULATION_ACCEPTED, NULL);
         } else if (starts(s, "lov") || starts(s, "let") || starts(s, "ye") ||
@@ -1993,12 +2006,42 @@ static void submit(App *a) {
         }
         break;
     case CHESS_REFUSAL:
-        if (*s) start_stage(a, SIMULATION_ACCEPTED, NULL);
+        if (has(s, "list games") || has(s, "lista giochi") || has(s, "elenco giochi") ||
+            (a->extended_mode && (has(s, "games") || has(s, "giochi") || has(s, "help") || has(s, "aiuto")))) {
+            media_sound(&a->audio, "Warlstgm");
+            start_stage(a, LIST_GAMES, "");
+        } else if (a->extended_mode && (has(s, "falken") || has(s, "maze") || has(s, "labirinto"))) {
+            start_stage(a, EXT_MAZE, "");
+        } else if (a->extended_mode && (has(s, "blackjack") || has(s, "black jack"))) {
+            start_stage(a, EXT_BLACKJACK, "");
+        } else if (a->extended_mode && has(s, "poker")) {
+            start_stage(a, EXT_POKER, "");
+        } else if (has(s, "tic tac toe") || has(s, "tic-tac-toe") || has(s, "tris")) {
+            start_stage(a, TIC_TAC_TOE, "");
+        } else if (*s) {
+            start_stage(a, SIMULATION_ACCEPTED, NULL);
+        }
         break;
     case LATER:
-        if (has(s, "chess") || has(s, "scacchi") || starts(s, "si") || starts(s, "sì") || starts(s, "ye")) {
+        if (has(s, "list games") || has(s, "lista giochi") || has(s, "elenco giochi") ||
+            (a->extended_mode && (has(s, "games") || has(s, "giochi") || has(s, "help") || has(s, "aiuto")))) {
+            media_sound(&a->audio, "Warlstgm");
+            start_stage(a, LIST_GAMES, "");
+        } else if (has(s, "chess") || has(s, "scacchi") || starts(s, "si") || starts(s, "sì") || starts(s, "ye")) {
             if (a->extended_mode) start_stage(a, EXT_CHESS, "");
             else start_stage(a, CHESS_REFUSAL, NULL);
+        } else if (a->extended_mode && (has(s, "falken") || has(s, "maze") || has(s, "labirinto"))) {
+            start_stage(a, EXT_MAZE, "");
+        } else if (a->extended_mode && (has(s, "blackjack") || has(s, "black jack"))) {
+            start_stage(a, EXT_BLACKJACK, "");
+        } else if (has(s, "poker")) {
+            if (a->extended_mode) start_stage(a, EXT_POKER, "");
+            else start_stage(a, SIMULATION_ACCEPTED, NULL);
+        } else if (has(s, "tic tac toe") || has(s, "tic-tac-toe") || has(s, "tris")) {
+            start_stage(a, TIC_TAC_TOE, "");
+        } else if (has(s, "no") && a->extended_mode) {
+            media_sound(&a->audio, "Warlstgm");
+            start_stage(a, LIST_GAMES, "");
         } else if (*s) {
             start_stage(a, SIMULATION_ACCEPTED, NULL);
         }
@@ -2103,11 +2146,13 @@ static void submit(App *a) {
                 media_sound(&a->audio, "Waracdnd");
                 start_video_sequence(a, clip, 1, LOGON_FINAL, "", CAPTIONS_NONE);
             }
-        } else if ((has(s, "global") || has(s, "theaterwide") || has(s, "termonucleare") || has(s, "teatrale")) && !a->played_global_war) {
+        } else if (has(s, "global") || has(s, "theaterwide") || has(s, "termonucleare") || has(s, "teatrale") || has(s, "guerra") || has(s, "war")) {
             static const char *const clip[] = {"War6"};
             a->played_global_war = 1;
             media_sound(&a->audio, "Wargrr");
             start_video_sequence(a, clip, 1, LOGON_FINAL, "", CAPTIONS_NONE);
+        } else if (has(s, "exit") || has(s, "esci") || has(s, "quit") || has(s, "logoff") || has(s, "bye")) {
+            start_stage(a, GAME_SHELL, NULL);
         } else if (has(s, "help") || has(s, "aiuto")) {
             if (a->extended_mode) {
                 if (a->lang == LANG_IT) {
@@ -2164,11 +2209,13 @@ static void submit(App *a) {
                 media_sound(&a->audio, "Waracdnd");
                 start_video_sequence(a, clip, 1, LIST_GAMES, "", CAPTIONS_NONE);
             }
-        } else if ((has(s, "global") || has(s, "theaterwide") || has(s, "termonucleare") || has(s, "teatrale")) && !a->played_global_war) {
+        } else if (has(s, "global") || has(s, "theaterwide") || has(s, "termonucleare") || has(s, "teatrale") || has(s, "guerra") || has(s, "war")) {
             static const char *const clip[] = {"War6"};
             a->played_global_war = 1;
             media_sound(&a->audio, "Wargrr");
             start_video_sequence(a, clip, 1, LIST_GAMES, "", CAPTIONS_NONE);
+        } else if (has(s, "exit") || has(s, "esci") || has(s, "quit") || has(s, "logoff") || has(s, "bye")) {
+            start_stage(a, GAME_SHELL, NULL);
         } else if (has(s, "help") || has(s, "aiuto")) {
             if (a->extended_mode) {
                 if (a->lang == LANG_IT) {

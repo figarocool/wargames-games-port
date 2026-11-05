@@ -7,6 +7,10 @@
 
 typedef struct App App;
 
+#define STAGE_DIAL_NUMBERS 6
+#define STAGE_PLAY         19
+#define STAGE_LIST_GAMES   42
+
 /* Bridge helpers implemented in main.c */
 void app_draw_text(App *a, const char *text, int x, int y, SDL_Color color);
 void app_draw_block_cursor(App *a, int x, int y, SDL_Color color);

@@ -251,7 +251,7 @@ void ext_chess_submit(App *a, const char *input) {
     if (strcmp(cmd, "exit") == 0 || strcmp(cmd, "esci") == 0 ||
         strcmp(cmd, "quit") == 0 || strcmp(cmd, "resign") == 0 ||
         strcmp(cmd, "arrenditi") == 0) {
-        app_start_stage(a, 32 /* LIST_GAMES */, "");
+        app_start_stage(a, STAGE_LIST_GAMES, "");
         return;
     }
 
@@ -399,7 +399,7 @@ void ext_maze_init(App *a) {
 void ext_maze_key(App *a, SDL_Keycode key) {
     if (m_won) {
         if (key == SDLK_RETURN || key == SDLK_SPACE || key == SDLK_ESCAPE) {
-            app_start_stage(a, 32 /* LIST_GAMES */, "");
+            app_start_stage(a, STAGE_LIST_GAMES, "");
         }
         return;
     }
@@ -410,7 +410,7 @@ void ext_maze_key(App *a, SDL_Keycode key) {
     else if (key == SDLK_LEFT || key == SDLK_a) dx = -1;
     else if (key == SDLK_RIGHT || key == SDLK_d) dx = 1;
     else if (key == SDLK_ESCAPE) {
-        app_start_stage(a, 32 /* LIST_GAMES */, "");
+        app_start_stage(a, STAGE_LIST_GAMES, "");
         return;
     }
 
@@ -439,11 +439,11 @@ void ext_maze_submit(App *a, const char *input) {
     cmd[len] = '\0';
 
     if (strcmp(cmd, "exit") == 0 || strcmp(cmd, "esci") == 0 || strcmp(cmd, "quit") == 0) {
-        app_start_stage(a, 32 /* LIST_GAMES */, "");
+        app_start_stage(a, STAGE_LIST_GAMES, "");
         return;
     }
     if (m_won) {
-        app_start_stage(a, 32 /* LIST_GAMES */, "");
+        app_start_stage(a, STAGE_LIST_GAMES, "");
         return;
     }
 
@@ -589,7 +589,7 @@ void ext_cards_submit(App *a, const char *input) {
     cmd[len] = '\0';
 
     if (strcmp(cmd, "exit") == 0 || strcmp(cmd, "esci") == 0 || strcmp(cmd, "quit") == 0) {
-        app_start_stage(a, 32 /* LIST_GAMES */, "");
+        app_start_stage(a, STAGE_LIST_GAMES, "");
         return;
     }
 
