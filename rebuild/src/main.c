@@ -1,7 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include <SDL.h>
 #include <SDL_ttf.h>
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__APPLE__)
 #include <X11/Xlib.h>
 #endif
 #include <ctype.h>
@@ -2546,7 +2546,7 @@ static TTF_Font *open_font(void) {
 
 /* Ask SDL's X11 backend to use the server's default visual so RGB colors stay exact. */
 static void select_default_x11_visual(void) {
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__APPLE__)
     Display *display = XOpenDisplay(NULL);
     if (!display) return;
     Visual *visual = DefaultVisual(display, DefaultScreen(display));
