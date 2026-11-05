@@ -535,6 +535,18 @@ static const LogonStep script_franco[] = {
     {"CURENTLY LIVING IN AUSTRALIA INVOLVED IN STOCKMARKET TRADING", 0, 500, 0, NULL, 0, 0}
 };
 
+static const LogonStep script_stefano[] = {
+    {"**STEFANO BASILE**", 1000, 1000, 0, NULL, 0, 0},
+    {"PORTED & REWRITTEN FROM FRANCO TOGLIATTO'S FREEBASIC TO NATIVE C", 0, 500, 0, NULL, 0, 0},
+    {"EMAIL: STEFANOBASILE@USA.COM", 0, 500, 0, NULL, 0, 0}
+};
+
+static const LogonStep script_stefano_it[] = {
+    {"**STEFANO BASILE**", 1000, 1000, 0, NULL, 0, 0},
+    {"PORTING E REWRITING DAL FREEBASIC DI FRANCO TOGLIATTO IN C NATIVO", 0, 500, 0, NULL, 0, 0},
+    {"EMAIL: STEFANOBASILE@USA.COM", 0, 500, 0, NULL, 0, 0}
+};
+
 static const LogonStep script_joshua[] = {
     {"", 0, 3000, 1, NULL, 0, 2}
 };
@@ -1961,6 +1973,9 @@ static void submit(App *a) {
             start_logon_script(a, script, (int)(sizeof(script_games) / sizeof(script_games[0])), cur_row + 1);
         } else if (strcmp(s, "franco") == 0) {
             start_logon_script(a, script_franco, (int)(sizeof(script_franco) / sizeof(script_franco[0])), cur_row + 1);
+        } else if (strcmp(s, "stefano") == 0 || strcmp(s, "stefano basile") == 0 || strcmp(s, "basile") == 0) {
+            const LogonStep *script = a->lang == LANG_IT ? script_stefano_it : script_stefano;
+            start_logon_script(a, script, (int)(sizeof(script_stefano) / sizeof(script_stefano[0])), cur_row + 1);
         } else {
             start_logon_script(a, script_rejected, (int)(sizeof(script_rejected) / sizeof(script_rejected[0])), cur_row + 1);
         }
@@ -2104,7 +2119,17 @@ static void submit(App *a) {
         break;
     case LOGON_AGAIN:
         if (has(s, "joshua")) start_stage(a, STILL_PLAYING, "");
-        else push_line(a, a->lang == LANG_IT ? "IDENTIFICAZIONE NON RICONOSCIUTA." : "IDENTIFICATION NOT RECOGNIZED.");
+        else if (has(s, "stefano") || has(s, "basile")) {
+            push_line(a, "**STEFANO BASILE**");
+            push_line(a, a->lang == LANG_IT
+                ? "PORTING E REWRITING DAL FREEBASIC DI FRANCO TOGLIATTO IN C NATIVO"
+                : "PORTED & REWRITTEN FROM FRANCO TOGLIATTO'S FREEBASIC TO NATIVE C");
+            push_line(a, "EMAIL: STEFANOBASILE@USA.COM");
+        } else if (has(s, "franco")) {
+            push_line(a, "**FRANCO TOGLIATTO**");
+            push_line(a, "SYSTEM INDICATES USER (AKA FALCON) ORIGINATOR OF THE PROGRAM");
+            push_line(a, "CURENTLY LIVING IN AUSTRALIA INVOLVED IN STOCKMARKET TRADING");
+        } else push_line(a, a->lang == LANG_IT ? "IDENTIFICAZIONE NON RICONOSCIUTA." : "IDENTIFICATION NOT RECOGNIZED.");
         break;
     case STILL_PLAYING:
         if (starts(s, "he") || starts(s, "ar")) {
@@ -2137,6 +2162,16 @@ static void submit(App *a) {
     case LOGON_FINAL:
         if (has(s, "tic tac toe") || has(s, "tic-tac-toe") || has(s, "tris")) {
             start_stage(a, TIC_TAC_TOE, "");
+        } else if (has(s, "stefano") || has(s, "basile")) {
+            push_line(a, "**STEFANO BASILE**");
+            push_line(a, a->lang == LANG_IT
+                ? "PORTING E REWRITING DAL FREEBASIC DI FRANCO TOGLIATTO IN C NATIVO"
+                : "PORTED & REWRITTEN FROM FRANCO TOGLIATTO'S FREEBASIC TO NATIVE C");
+            push_line(a, "EMAIL: STEFANOBASILE@USA.COM");
+        } else if (has(s, "franco")) {
+            push_line(a, "**FRANCO TOGLIATTO**");
+            push_line(a, "SYSTEM INDICATES USER (AKA FALCON) ORIGINATOR OF THE PROGRAM");
+            push_line(a, "CURENTLY LIVING IN AUSTRALIA INVOLVED IN STOCKMARKET TRADING");
         } else if (has(s, "list games") || has(s, "lista giochi") || has(s, "elenco giochi")) {
             start_stage(a, LIST_GAMES, NULL);
         } else if (has(s, "chess") || has(s, "scacchi")) {
