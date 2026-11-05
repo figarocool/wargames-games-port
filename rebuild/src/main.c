@@ -2576,10 +2576,10 @@ static void render(App *a) {
         draw_text(a, "         WARGAMES (1983/1995) - SYSTEM ARCHITECTURE         ", 120, 130, amber);
         draw_text(a, "============================================================", 120, 150, cyan);
         draw_text(a, "SELECT VERSION & LANGUAGE / SCEGLI VERSIONE E LINGUA:", 140, 195, green);
-        draw_text(a, "1. ITALIANO - VERSIONE ORIGINALE (1995 FEDELE)", 160, 235, cyan);
-        draw_text(a, "2. ITALIANO - EDIZIONE ESTESA (TUTTI I GIOCHI & BACKDOOR)", 160, 265, white);
-        draw_text(a, "3. ENGLISH  - ORIGINAL VERSION (1995 FAITHFUL)", 160, 295, cyan);
-        draw_text(a, "4. ENGLISH  - EXTENDED EDITION (ALL PLAYABLE GAMES & BACKDOORS)", 160, 325, white);
+        draw_text(a, "1. ITALIANO (CLASSICO)", 160, 235, cyan);
+        draw_text(a, "2. ITALIANO (VERSIONE ESTESA)", 160, 265, white);
+        draw_text(a, "3. ENGLISH  (CLASSIC)", 160, 295, cyan);
+        draw_text(a, "4. ENGLISH  (EXTENDED)", 160, 325, white);
         draw_text(a, "ENTER CHOICE [1-4] / SCEGLI [1-4]: ", 140, 385, green);
         draw_block_cursor(a, 420, 385, cyan);
         present_rendered_frame(a);
@@ -3397,29 +3397,25 @@ int main(void) {
                         a.lang = LANG_IT;
                         a.extended_mode = 0;
                         media_set_language(&a.audio, a.lang);
-                        if (has_completed_carrier_scan()) start_stage(&a, DIAL_NUMBERS, "");
-                        else start_intro(&a);
+                        start_intro(&a);
                         continue;
                     } else if (event.key.keysym.sym == SDLK_2 || event.key.keysym.sym == SDLK_KP_2) {
                         a.lang = LANG_IT;
                         a.extended_mode = 1;
                         media_set_language(&a.audio, a.lang);
-                        if (has_completed_carrier_scan()) start_stage(&a, DIAL_NUMBERS, "");
-                        else start_intro(&a);
+                        start_intro(&a);
                         continue;
                     } else if (event.key.keysym.sym == SDLK_3 || event.key.keysym.sym == SDLK_KP_3) {
                         a.lang = LANG_EN;
                         a.extended_mode = 0;
                         media_set_language(&a.audio, a.lang);
-                        if (has_completed_carrier_scan()) start_stage(&a, DIAL_NUMBERS, "");
-                        else start_intro(&a);
+                        start_intro(&a);
                         continue;
                     } else if (event.key.keysym.sym == SDLK_4 || event.key.keysym.sym == SDLK_KP_4) {
                         a.lang = LANG_EN;
                         a.extended_mode = 1;
                         media_set_language(&a.audio, a.lang);
-                        if (has_completed_carrier_scan()) start_stage(&a, DIAL_NUMBERS, "");
-                        else start_intro(&a);
+                        start_intro(&a);
                         continue;
                     } else if (event.key.keysym.sym == SDLK_ESCAPE) {
                         a.running = 0;
@@ -3497,6 +3493,18 @@ int main(void) {
                     if (media_video_active(&a.video)) finish_current_video(&a);
                     else if (a.stage == STORY_CAPTION) advance_story_caption(&a);
                     else if (a.stage == INTRO) start_stage(&a, PHONE, "");
+                    else if (a.stage == PHONE) {
+                        static const char required_scan_digits[] = "311399311437311767311936";
+                        memcpy(a.scan_digits, required_scan_digits, sizeof(required_scan_digits));
+                        a.scan_digit_index = sizeof(required_scan_digits) - 1;
+                        start_stage(&a, SCANNING, "");
+                        a.scan_started = SDL_GetTicks();
+                        media_voice(&a.audio, "Warhello");
+                        a.scan_sfm_played = 0;
+                        a.scan_caption_started = 0;
+                        a.scan_dynamic_started = 0;
+                        a.scan_dynamic_count = 0;
+                    }
                     else submit(&a);
                 }
                 else if (event.key.keysym.sym == SDLK_SPACE && a.stage == STORY_CAPTION) advance_story_caption(&a);
@@ -3546,29 +3554,25 @@ int main(void) {
                         a.lang = LANG_IT;
                         a.extended_mode = 0;
                         media_set_language(&a.audio, a.lang);
-                        if (has_completed_carrier_scan()) start_stage(&a, DIAL_NUMBERS, "");
-                        else start_intro(&a);
+                        start_intro(&a);
                         continue;
                     } else if (event.text.text[0] == '2') {
                         a.lang = LANG_IT;
                         a.extended_mode = 1;
                         media_set_language(&a.audio, a.lang);
-                        if (has_completed_carrier_scan()) start_stage(&a, DIAL_NUMBERS, "");
-                        else start_intro(&a);
+                        start_intro(&a);
                         continue;
                     } else if (event.text.text[0] == '3') {
                         a.lang = LANG_EN;
                         a.extended_mode = 0;
                         media_set_language(&a.audio, a.lang);
-                        if (has_completed_carrier_scan()) start_stage(&a, DIAL_NUMBERS, "");
-                        else start_intro(&a);
+                        start_intro(&a);
                         continue;
                     } else if (event.text.text[0] == '4') {
                         a.lang = LANG_EN;
                         a.extended_mode = 1;
                         media_set_language(&a.audio, a.lang);
-                        if (has_completed_carrier_scan()) start_stage(&a, DIAL_NUMBERS, "");
-                        else start_intro(&a);
+                        start_intro(&a);
                         continue;
                     }
                     continue;
@@ -3585,10 +3589,9 @@ int main(void) {
                 } else if (a.stage == PHONE) {
                     static const char required_scan_digits[] = "311399311437311767311936";
                     for (size_t i = 0; event.text.text[i] && a.stage == PHONE; ++i) {
-                        char key = event.text.text[i];
-                        if (a.scan_digit_index < sizeof(required_scan_digits) - 1 &&
-                            key == required_scan_digits[a.scan_digit_index]) {
-                            a.scan_digits[a.scan_digit_index++] = key;
+                        if (a.scan_digit_index < sizeof(required_scan_digits) - 1) {
+                            a.scan_digits[a.scan_digit_index] = required_scan_digits[a.scan_digit_index];
+                            a.scan_digit_index++;
                             a.scan_digits[a.scan_digit_index] = 0;
                             media_type_key(&a.audio);
                             if (a.scan_digit_index == sizeof(required_scan_digits) - 1) {
