@@ -77,12 +77,23 @@ void media_audio_close(GameAudio *audio) {
     memset(audio, 0, sizeof(*audio));
 }
 
+void media_set_language(GameAudio *audio, int lang) {
+    if (audio) audio->lang = lang;
+}
+
 /* Play a named MP3 voice clip from the game's Wopr asset folder. */
 void media_voice(GameAudio *audio, const char *asset_name) {
     if (!audio || !audio->ready || !asset_name) return;
     media_stop_voice(audio);
     char path[256];
-    snprintf(path, sizeof(path), "%sWopr/%s.dat", media_asset_prefix(), asset_name);
+    if (audio->lang == 1) {
+        snprintf(path, sizeof(path), "%sWopr_it/%s.dat", media_asset_prefix(), asset_name);
+        if (access(path, R_OK) != 0) {
+            snprintf(path, sizeof(path), "%sWopr/%s.dat", media_asset_prefix(), asset_name);
+        }
+    } else {
+        snprintf(path, sizeof(path), "%sWopr/%s.dat", media_asset_prefix(), asset_name);
+    }
     SDL_RWops *stream = SDL_RWFromFile(path, "rb");
     if (!stream) return;
     audio->voice = Mix_LoadMUSType_RW(stream, MUS_MP3, 1);

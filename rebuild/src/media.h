@@ -28,12 +28,14 @@ typedef struct {
     Mix_Chunk *effects[19];
     unsigned key_counter;
     int ready;
+    int lang;
 } GameAudio;
 
 /* Open decoders and the SDL audio output. Audio is optional at runtime. */
 const char *media_asset_prefix(void);
 int media_audio_init(GameAudio *audio);
 void media_audio_close(GameAudio *audio);
+void media_set_language(GameAudio *audio, int lang);
 void media_voice(GameAudio *audio, const char *asset_name);
 void media_stop_voice(GameAudio *audio);
 int media_voice_active(const GameAudio *audio);

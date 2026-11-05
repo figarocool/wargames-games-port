@@ -3008,6 +3008,7 @@ int main(void) {
     if (lang_env) {
         if (strcmp(lang_env, "it") == 0 || strcmp(lang_env, "IT") == 0) a.lang = LANG_IT;
         else a.lang = LANG_EN;
+        media_set_language(&a.audio, a.lang);
     }
     const char *compare_start = getenv("WARGAME_COMPARE_START");
     if (compare_start && strcmp(compare_start, "carriers") == 0) {
@@ -3080,11 +3081,13 @@ int main(void) {
                 if (a.stage == SELECT_LANGUAGE) {
                     if (event.key.keysym.sym == SDLK_1 || event.key.keysym.sym == SDLK_KP_1) {
                         a.lang = LANG_EN;
+                        media_set_language(&a.audio, a.lang);
                         if (has_completed_carrier_scan()) start_stage(&a, DIAL_NUMBERS, "");
                         else start_intro(&a);
                         continue;
                     } else if (event.key.keysym.sym == SDLK_2 || event.key.keysym.sym == SDLK_KP_2) {
                         a.lang = LANG_IT;
+                        media_set_language(&a.audio, a.lang);
                         if (has_completed_carrier_scan()) start_stage(&a, DIAL_NUMBERS, "");
                         else start_intro(&a);
                         continue;
@@ -3202,11 +3205,13 @@ int main(void) {
                 if (a.stage == SELECT_LANGUAGE) {
                     if (event.text.text[0] == '1') {
                         a.lang = LANG_EN;
+                        media_set_language(&a.audio, a.lang);
                         if (has_completed_carrier_scan()) start_stage(&a, DIAL_NUMBERS, "");
                         else start_intro(&a);
                         continue;
                     } else if (event.text.text[0] == '2') {
                         a.lang = LANG_IT;
+                        media_set_language(&a.audio, a.lang);
                         if (has_completed_carrier_scan()) start_stage(&a, DIAL_NUMBERS, "");
                         else start_intro(&a);
                         continue;
