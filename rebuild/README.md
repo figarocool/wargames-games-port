@@ -1,6 +1,6 @@
 # Wargames: Ricostruzione e Porting in C (8Byte Software)
 
-Questa è la ricostruzione e porting nativo in linguaggio C (C11 + SDL2) del videogioco per PC *WarGames* (1983/1995/2008), originariamente programmato in FreeBASIC da **Franco Togliatto** e riscritto ed esteso da **Stefano Basile** ([stefanobasile@usa.com](mailto:stefanobasile@usa.com)) per **8Byte Software** (2026).
+Questa è la ricostruzione e porting nativo in linguaggio C (C11 + SDL2) del videogioco per PC *WarGames* (1983/1995/2008), originariamente programmato in FreeBASIC da **Franco Togliatto** e riscritto ed esteso da **Stefano Basile** per **8Byte Software** (2026).
 
 Il codice C descrive ad alto livello le schermate, i comandi, le transizioni della storia, la gestione dei font TrueType e la riproduzione dei media; non contiene indirizzi fissi del programma originale né etichette opache del decompilatore. I file di reverse-engineering Ghidra sono conservati separatamente in `../re/` e non sono necessari per la compilazione del gioco.
 
@@ -34,14 +34,10 @@ make -C rebuild
 ## Versioni e Modalità del Gioco
 
 All'avvio, il menu permette di selezionare:
-1. **ITALIANO (CLASSICO)**: Fedele 1:1 all'avventura originale di Franco Togliatto, interamente tradotto in italiano (didascalie trasparenti, terminale e audio).
-2. **ITALIANO (VERSIONE ESTESA)**: Include tutta la trama classica con in più l'hacking bancario completo della Union Pacific (`311-399-2364`), il sistema Pan Am esteso e tutti i giochi della lista di Joshua sbloccati e giocabili (*Scacchi*, *Falken's Maze*, *Blackjack*, *Poker*, *Tris*).
-3. **ENGLISH (CLASSIC)**: Modalità cinematografica originale fedele al film del 1983.
-4. **ENGLISH (EXTENDED)**: Edizione estesa in inglese con tutti i giochi e sistemi giocabili.
-
-### Easter Eggs al prompt `LOGON:`
-- `stefano` o `stefano basile`: crediti del porting di Stefano Basile per 8Byte Software (`stefanobasile@usa.com`).
-- `franco`: omaggio al programmatore originale Franco Togliatto.
+1. **ITALIANO (CLASSICO)**: Esperienza classica fedele all'originale.
+2. **ITALIANO (VERSIONE ESTESA)**: Nuove funzionalità, terminali e contenuti da scoprire giocando.
+3. **ENGLISH (CLASSIC)**: Classic original gameplay.
+4. **ENGLISH (EXTENDED)**: Extended edition with new features to discover.
 
 ## Confronto automatico con l'originale
 

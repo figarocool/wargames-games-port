@@ -2,7 +2,7 @@
 
 Porting e ricostruzione nativa in linguaggio C del videogioco per PC ispirato al celebre film cult **WarGames** (1983).
 
-Originariamente programmato in FreeBASIC da **Franco Togliatto** (1995/2008), il progetto è stato completamente reingegnerizzato, riscritto in C nativo (C11 + SDL2) ed esteso da **Stefano Basile** ([stefanobasile@usa.com](mailto:stefanobasile@usa.com)) per **8Byte Software** (2026).
+Originariamente programmato in FreeBASIC da **Franco Togliatto** (1995/2008), il progetto è stato completamente reingegnerizzato, riscritto in C nativo (C11 + SDL2) ed esteso da **Stefano Basile** per **8Byte Software** (2026).
 
 ---
 
@@ -73,9 +73,9 @@ All'avvio comparirà il selettore iniziale per scegliere la lingua e la modalit�
 
 ---
 
-## 🎮 Differenze tra le Versioni
+## 🎮 Modalità di Gioco
 
-All'avvio, il menu principale consente di selezionare 4 modalità:
+All'avvio, il menu principale consente di selezionare la lingua e la modalità desiderata:
 
 ```text
 1. ITALIANO (CLASSICO)
@@ -84,46 +84,13 @@ All'avvio, il menu principale consente di selezionare 4 modalità:
 4. ENGLISH  (EXTENDED)
 ```
 
-### 1. Modalità Classica (Italiano / English)
-È la ricostruzione fedele 1:1 dell'esperienza originale di Franco Togliatto e degli eventi narrativi del film:
-- **Wardialing IMSAI (311):** ricerca sequenziale dei toni vettore componendo i prefissi `399`, `437`, `767`, `936`.
-- **Pan American Airlines:** prenotazione dei voli per Parigi per eludere l'FBI.
-- **Logon W.O.P.R.:** accesso al supercomputer militare NORAD tramite la celebre backdoor `Joshua`.
-- **Interrogatorio e Falken:** conversazione intelligente su Stephen Falken, la morte del figlio e l'eliminazione dell'account.
-- **Simulazione e Mappa Strategica:** tracciamento in tempo reale delle traiettorie dei missili ICBM e calcolo delle perdite stimate.
-- **Confronto Finale a Tris:** partita a Tic-Tac-Toe con la rivelazione che l'unica mossa vincente è non giocare.
-- **Localizzazione completa in Italiano:** didascalie grafiche trasparenti (`Wartxt1.dat`, `Wartxt6.dat`), dialoghi, terminale e tracce audio tradotte.
-
-### 2. Versione Estesa (Italiano / English)
-Oltre a tutta la storia originale, la **Versione Estesa** sblocca e implementa tutti i sistemi e giochi che nell'originale erano inaccessibili o simulati come semplice testo:
-- **Hacking Bancario Union Pacific (311-399-2364):** terminale interattivo di sicurezza bancaria con comandi per consultare saldi, forzare password e trasferire fondi.
-- **Pan Am GDS Esteso:** sistema completo di prenotazione con consultazione libera degli orari di volo, ricerca passeggeri e cambio itinerari.
-- **Tutti i Giochi della Lista di Joshua Giocabili:**
-  - ♟️ **Scacchi (Chess):** scacchiera ASCII interattiva completa con motore di gioco e IA avversaria.
-  - 🌀 **Falken's Maze (Labirinto):** labirinto procedurale bidimensionale navigabile in tempo reale con frecce direzionali / WASD.
-  - ♠️ **Blackjack (Ventuno):** tavolo da casinò giocabile con gestione delle fiches, puntate e banco.
-  - 🃏 **Poker:** partita completa a 5-card draw con cambio carte, scommesse e rilanci contro W.O.P.R.
-  - ❌⭕ **Tris (Tic-Tac-Toe)** e **Guerra Termonucleare Globale**.
-
----
-
-## 🕵️ Easter Eggs & Crediti Nascosti
-
-Al prompt di accesso (`LOGON:`), oltre alla password di trama `Joshua`:
-- Digitando **`stefano`** (o **`stefano basile`**): visualizza i crediti del porting in C e l'indirizzo email dell'autore:
-  ```text
-  **STEFANO BASILE**
-  PORTING E REWRITING DAL FREEBASIC DI FRANCO TOGLIATTO IN C NATIVO
-  EMAIL: STEFANOBASILE@USA.COM
-  ```
-- Digitando **`franco`**: visualizza l'omaggio all'autore storico originale Franco Togliatto.
-- Il banner scorrevole inferiore riporta la dicitura:
-  `COPYRIGHT (C) 2026 8BYTE SOFTWARE...`
+- **Modalità Classica**: Ricostruzione fedele dell'esperienza originale del videogioco e della narrazione cult del film.
+- **Versione Estesa**: Nuove possibilità di interazione, sistemi sbloccati ed elementi inediti tutti da scoprire esplorando e giocando.
 
 ---
 
 ## 📜 Licenza e Crediti
 
 - Progetto originale (1995/2008): **Franco Togliatto** (FreeBASIC).
-- Porting in C nativo, estensioni e localizzazione (2026): **Stefano Basile** per **8Byte Software**.
+- Porting in C nativo ed estensioni (2026): **Stefano Basile** per **8Byte Software**.
 - Tutti i marchi, loghi e riferimenti a *WarGames* (1983) appartengono ai rispettivi titolari (MGM / United Artists).
